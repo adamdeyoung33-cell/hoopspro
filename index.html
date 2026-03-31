@@ -1,3 +1,4 @@
+# HoopsPro V2.4: Ultra-Stable Training Tracker
 
 <!DOCTYPE html>
 <html lang="en">
@@ -14,12 +15,11 @@
             --hoops-orange: #ff6b00;
             --hoops-black: #0a0a0a;
             --hoops-gray: #1a1a1a;
-            --hoops-card: #141414;
         }
 
         body {
-
             font-family: 'Plus Jakarta Sans', sans-serif;
+
             background-color: var(--hoops-black);
             color: #ffffff;
             -webkit-tap-highlight-color: transparent;
@@ -27,7 +27,7 @@
         }
 
         .dashboard-card {
-            background: var(--hoops-card);
+            background: #111;
             border: 1px solid #222;
             border-radius: 28px;
         }
@@ -37,16 +37,11 @@
             color: white;
             font-weight: 800;
             border-radius: 20px;
-            box-shadow: 0 10px 20px rgba(255, 107, 0, 0.2);
-
             transition: all 0.2s;
         }
 
-        .btn-primary:active { transform: scale(0.95); opacity: 0.9; }
 
-        .stat-glow {
-            text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
-        }
+        .btn-primary:active { transform: scale(0.95); opacity: 0.9; }
 
         .hidden-section { display: none; }
         
@@ -58,7 +53,6 @@
         #syncOverlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.98);
             z-index: 5000; display: none; flex-direction: column;
-
             align-items: center; justify-content: center; text-align: center;
         }
 
@@ -66,80 +60,70 @@
             border: 4px solid #222; border-top: 4px solid var(--hoops-orange);
             border-radius: 50%; width: 50px; height: 50px;
             animation: spin 0.8s linear infinite;
+
         }
 
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* Custom UI for inputs */
-        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
 <body class="max-w-md mx-auto min-h-screen flex flex-col antialiased">
 
     <!-- Loading Screen -->
     <div id="syncOverlay">
-
         <div class="spinner mb-6"></div>
-        <h2 class="text-2xl font-black mb-2">SYNCING VAULT</h2>
-        <p id="overlayStatus" class="text-gray-500 text-sm px-12">Connecting to secure training cloud...</p>
-        <button id="skipSyncBtn" onclick="closeOverlay()" class="mt-8 text-xs font-bold text-gray-700 uppercase tracking-widest hidden">Skip & Work Offline</button>
+        <h2 class="text-2xl font-black mb-2 tracking-tighter">CONNECTING...</h2>
+        <p id="overlayStatus" class="text-gray-500 text-sm px-12 italic">Bypassing security blocks for cloud sync...</p>
+        <button onclick="closeOverlay()" class="mt-8 text-[10px] font-black text-gray-700 uppercase tracking-widest">Use Offline Instead</button>
     </div>
 
     <!-- Header -->
     <header class="p-6 pb-2 flex justify-between items-start">
         <div>
-            <h1 class="text-2xl font-black italic tracking-tighter leading-none">HOOPSPRO <span class="text-orange-600">V2.3</span></h1>
+            <h1 class="text-2xl font-black italic tracking-tighter leading-none">HOOPSPRO <span class="text-orange-600">V2.4</span></h1>
+
             <div class="flex items-center gap-2 mt-3">
                 <div id="syncIndicator" class="sync-dot bg-gray-700"></div>
-                <span id="syncLabel" class="text-[9px] text-gray-500 font-extrabold uppercase tracking-widest">Initial Boot...</span>
+                <span id="syncLabel" class="text-[9px] text-gray-500 font-extrabold uppercase tracking-widest">Checking Sync...</span>
             </div>
         </div>
-        <button onclick="toggleSection('settings')" class="p-3 bg-gray-900/50 rounded-2xl border border-gray-800">
+        <button onclick="toggleSection('settings')" class="p-3 bg-gray-900 rounded-2xl border border-gray-800">
             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
         </button>
     </header>
 
-
-    <main id="appBody" class="flex-1 px-6 pb-24 overflow-y-auto">
+    <main class="flex-1 px-6 pb-24 overflow-y-auto">
         
         <!-- Home View -->
         <div id="homeSection">
-            <!-- Daily Quote Card -->
-            <section class="dashboard-card p-6 mb-6 relative overflow-hidden">
-                <div class="absolute top-0 right-0 p-4 opacity-5">
-                    <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21L14.017 18C14.017 16.8954 14.9124 16 16.017 16H19.017C19.5693 16 20.017 15.5523 20.017 15V9C20.017 8.44772 19.5693 8 19.017 8H16.017C14.9124 8 14.017 7.10457 14.017 6V3H21.017V15C21.017 18.3137 18.3307 21 15.017 21H14.017ZM3.01709 21L3.01709 18C3.01709 16.8954 3.91252 16 5.01709 16H8.01709C8.56937 16 9.01709 15.5523 9.01709 15V9C9.01709 8.44772 8.56937 8 8.01709 8H5.01709C3.91252 8 3.01709 7.10457 3.01709 6V3H10.0171V15C10.0171 18.3137 7.33081 21 4.01709 21H3.01709Z"></path></svg>
-                </div>
-                <span class="text-[10px] font-bold text-orange-600 uppercase tracking-[0.2em] block mb-3">The Word</span>
-                <p id="quoteText" class="text-lg font-extrabold italic leading-snug tracking-tight">"Wait..."</p>
-                <p id="authorText" class="text-xs text-gray-500 mt-4 font-black">— ...</p>
+            <section class="dashboard-card p-6 mb-6">
+                <span class="text-[10px] font-bold text-orange-600 uppercase tracking-widest block mb-3">Daily Inspiration</span>
+                <p id="quoteText" class="text-lg font-extrabold italic leading-tight">"Loading..."</p>
+                <p id="authorText" class="text-xs text-gray-500 mt-4 font-black">— Kara Lawson</p>
             </section>
 
-            <!-- Quick Stats -->
+
             <div class="grid grid-cols-2 gap-4 mb-6">
                 <div class="dashboard-card p-5 text-center">
-                    <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Active Days</span>
-                    <div id="statDays" class="text-5xl font-black stat-glow mt-1">0</div>
-
+                    <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Days Trained</span>
+                    <div id="statDays" class="text-5xl font-black mt-1">0</div>
                 </div>
                 <div class="dashboard-card p-5 text-center">
                     <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Shots Made</span>
-                    <div id="statTotal" class="text-5xl font-black stat-glow mt-1 text-orange-500">0</div>
+                    <div id="statTotal" class="text-5xl font-black mt-1 text-orange-500">0</div>
                 </div>
             </div>
 
-            <!-- Action Button -->
             <button onclick="toggleSection('log')" class="btn-primary w-full py-5 text-xl shadow-2xl mb-8 flex justify-center items-center gap-3">
-                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path></svg>
-                RECORD SESSION
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path></svg>
+                START TRAINING
             </button>
 
-            <!-- Chart Card -->
             <div class="dashboard-card p-6">
                 <div class="flex justify-between items-center mb-6">
-                    <h3 class="font-bold text-xs uppercase tracking-[0.15em] text-gray-400">Progression</h3>
-                    <select id="graphFilter" onchange="updateGraph()" class="bg-transparent text-orange-500 text-[10px] font-black border-none outline-none appearance-none">
-                        <option value="Total">TOTAL VOLUME</option>
+                    <h3 class="font-bold text-xs uppercase tracking-widest text-gray-500">Analytics</h3>
 
+                    <select id="graphFilter" onchange="updateGraph()" class="bg-transparent text-orange-500 text-[10px] font-black border-none outline-none">
+                        <option value="Total">TOTAL MADE</option>
                     </select>
                 </div>
                 <div class="h-[180px]">
@@ -148,121 +132,96 @@
             </div>
         </div>
 
-        <!-- Logging View -->
+        <!-- Log View -->
         <div id="logSection" class="hidden-section">
-            <h2 class="text-3xl font-black mb-1">Get to Work.</h2>
-            <p class="text-gray-500 text-xs font-bold uppercase tracking-widest mb-8">Intensity is not optional.</p>
+            <h2 class="text-3xl font-black mb-1">Log Shots</h2>
+            <p class="text-gray-500 text-xs font-bold uppercase tracking-widest mb-8">Intensity is everything.</p>
             <div id="logInputList" class="space-y-4 mb-10"></div>
             <div class="flex gap-3">
-                <button onclick="toggleSection('home')" class="flex-1 py-4 bg-gray-900 rounded-2xl font-bold text-gray-500">CANCEL</button>
-                <button onclick="saveSession()" class="flex-1 py-4 btn-primary rounded-2xl font-bold">LOG WORKOUT</button>
+                <button onclick="toggleSection('home')" class="flex-1 py-4 bg-gray-900 rounded-2xl font-bold text-gray-500">BACK</button>
+                <button onclick="saveSession()" class="flex-1 py-4 btn-primary rounded-2xl font-bold">SAVE</button>
             </div>
+
         </div>
 
-
-        <!-- Settings & Debug View -->
+        <!-- Settings View -->
         <div id="settingsSection" class="hidden-section">
-            <h2 class="text-3xl font-black mb-8">System</h2>
+            <h2 class="text-3xl font-black mb-8">Settings</h2>
             
-            <!-- Connection Diagnostics -->
             <div class="dashboard-card p-6 mb-6">
-                <h3 class="text-orange-500 font-black text-xs uppercase tracking-widest mb-4">Sync Diagnostic</h3>
-                <div id="syncLog" class="bg-black rounded-xl p-3 font-mono text-[9px] text-gray-500 mb-4 h-20 overflow-y-auto border border-gray-800">
-                    Initializing...<br>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="sync(true)" class="flex-1 py-3 bg-gray-800 rounded-xl text-[10px] font-black uppercase text-white">Retry Cloud Sync</button>
-                    <button onclick="toggleDebug()" class="px-4 bg-gray-800 rounded-xl text-[10px] font-black">LOG</button>
-                </div>
-            </div>
-
-            <!-- Magic Link -->
-            <div class="dashboard-card p-6 mb-6">
-                <h3 class="text-gray-300 font-black text-xs uppercase tracking-widest mb-2">Device Linking</h3>
-
-                <p class="text-[10px] text-gray-500 mb-4">Copy this link to the other device to share history.</p>
+                <h3 class="text-orange-500 font-black text-xs uppercase tracking-widest mb-4">Device Sync</h3>
+                <p class="text-[10px] text-gray-500 mb-4">Use this link to sync your phone automatically.</p>
                 <div class="flex gap-2">
                     <input type="text" id="magicUrl" readonly class="bg-black/50 border border-gray-800 rounded-xl p-3 text-[9px] flex-1 font-mono text-gray-500">
                     <button onclick="copyToClipboard('magicUrl')" class="px-5 btn-primary rounded-xl text-[10px]">LINK</button>
                 </div>
             </div>
 
-            <!-- Manual Fail-Safe -->
+            <!-- Manual Sync Fallback -->
             <div class="dashboard-card p-6 mb-6 border-orange-900/30">
-                <h3 class="text-red-500 font-black text-xs uppercase tracking-widest mb-2">Manual Data Recovery</h3>
-                <p class="text-[9px] text-gray-500 mb-4">If the cloud is blocked, copy this code and paste it into the other device manually.</p>
+                <h3 class="text-orange-500 font-black text-xs uppercase tracking-widest mb-2">Manual Backup</h3>
+                <p class="text-[9px] text-gray-500 mb-4">If the cloud is offline, copy this data and paste it on your phone.</p>
+
                 <textarea id="rawData" class="bg-black border border-gray-800 rounded-xl p-3 text-[8px] w-full h-16 font-mono text-gray-600 mb-3" placeholder="Paste data here to restore..."></textarea>
                 <div class="flex gap-2">
-                    <button onclick="copyToClipboard('rawData')" class="flex-1 py-2 bg-gray-900 rounded-lg text-[9px] font-bold">COPY DATA</button>
-                    <button onclick="importData()" class="flex-1 py-2 bg-gray-900 rounded-lg text-[9px] font-bold">IMPORT DATA</button>
+                    <button onclick="copyToClipboard('rawData')" class="flex-1 py-2 bg-gray-900 rounded-lg text-[9px] font-bold">COPY</button>
+                    <button onclick="importData()" class="flex-1 py-2 bg-gray-900 rounded-lg text-[9px] font-bold">IMPORT</button>
                 </div>
             </div>
 
             <!-- Drills -->
-
             <div class="dashboard-card p-6 mb-8">
-                <h3 class="text-gray-400 font-black text-xs uppercase tracking-widest mb-4">Drill Manager</h3>
+                <h3 class="text-gray-400 font-black text-xs uppercase tracking-widest mb-4">Drills</h3>
                 <div class="flex gap-2 mb-4">
-                    <input type="text" id="newDrill" placeholder="New Drill Name" class="bg-black border border-gray-800 rounded-xl p-3 text-sm flex-1 outline-none focus:border-orange-500">
+                    <input type="text" id="newDrill" placeholder="New Drill" class="bg-black border border-gray-800 rounded-xl p-3 text-sm flex-1 outline-none focus:border-orange-500">
                     <button onclick="addDrill()" class="px-5 btn-primary rounded-xl">+</button>
                 </div>
                 <ul id="drillEditList" class="space-y-2"></ul>
             </div>
 
-            <button onclick="toggleSection('home')" class="w-full py-4 bg-gray-800 rounded-2xl font-bold">BACK TO DASHBOARD</button>
+            <button onclick="toggleSection('home')" class="w-full py-4 bg-gray-800 rounded-2xl font-bold uppercase tracking-widest">Dashboard</button>
         </div>
+
     </main>
 
     <script>
         const QUOTES = [
-            {q: "We all wait in life for things to get easier... It will never get easier. What happens is you handle hard better.", a: "Kara Lawson"},
+            {q: "It will never get easier. What happens is you handle hard better.", a: "Kara Lawson"},
             {q: "Make yourself a person that handles hard stuff well.", a: "Kara Lawson"},
-            {q: "You get to control who you are in adversity.", a: "Kara Lawson"},
             {q: "The big difference between a really good player and a great player is great players don’t get tired.", a: "Geno Auriemma"},
-
             {q: "You don’t rise to the occasion; you sink to the level of your training.", a: "Geno Auriemma"},
             {q: "Average is always available. Greatness is not.", a: "Geno Auriemma"}
         ];
 
         let state = {
             id: null,
-            drills: ["Form Shooting (10)", "Free Throws", "Three Pointers"],
+            drills: ["Form Shooting (10)", "Free Throws", "Layups"],
             history: []
         };
         let chart = null;
 
         window.onload = async () => {
-            logSync("App Booting...");
+
             const params = new URLSearchParams(window.location.search);
             const mid = params.get('id');
 
-            // Set ID
             if (mid) {
                 state.id = mid;
-
                 localStorage.setItem('hoops_id', mid);
-                logSync("Magic Link detected: " + mid);
-                await sync(true); // Force Pull immediately
+                await sync(true); // Force Pull
             } else {
                 state.id = localStorage.getItem('hoops_id') || Math.random().toString(36).substr(2, 9);
                 localStorage.setItem('hoops_id', state.id);
                 loadLocal();
-                logSync("Loaded Local Session: " + state.id);
             }
 
             initUI();
-            sync(); // Background sync
+            sync(); 
         };
-
-        function logSync(msg) {
-            const l = document.getElementById('syncLog');
-            l.innerHTML += `> ${msg}<br>`;
-            l.scrollTop = l.scrollHeight;
-        }
-
 
         function initUI() {
             const day = Math.floor(Date.now() / 86400000) % QUOTES.length;
+
             document.getElementById('quoteText').innerText = `"${QUOTES[day].q}"`;
             document.getElementById('authorText').innerText = `— ${QUOTES[day].a}`;
             refreshStats();
@@ -280,108 +239,90 @@
 
         function persist() {
             localStorage.setItem(`h_data_${state.id}`, JSON.stringify(state));
-
-            document.getElementById('rawData').value = JSON.stringify(state);
             refreshStats();
             sync();
+
         }
 
         /**
-         * ULTRA-RESILIENT SYNC ENGINE
+         * UPDATED SYNC ENGINE WITH CORS PROXY
          */
         async function sync(isForced = false) {
-            if (isForced) {
-                document.getElementById('syncOverlay').style.display = 'flex';
-                document.getElementById('skipSyncBtn').classList.add('hidden');
-                setTimeout(() => document.getElementById('skipSyncBtn').classList.remove('hidden'), 4000);
-            }
-
+            if (isForced) document.getElementById('syncOverlay').style.display = 'flex';
             setIndicator('pending');
-            logSync("Connecting to cloud...");
             
-            // We use a public, high-uptime storage relay
-
-            const endpoint = `https://kvstore.io{state.id}`;
+            // Using a CORS proxy to bypass security blocks
+            const rawEndpoint = `https://kvstore.io{state.id}`;
+            const proxyEndpoint = `https://corsproxy.io{encodeURIComponent(rawEndpoint)}`;
 
             try {
-                const res = await fetch(endpoint, { cache: 'no-store' });
+                const res = await fetch(proxyEndpoint, { cache: 'no-store' });
                 
                 if (res.ok) {
                     const cloud = await res.json();
-                    logSync("Cloud data retrieved successfully.");
-
                     if (isForced) {
+
                         state.history = cloud.history || [];
                         state.drills = cloud.drills || state.drills;
                     } else {
-                        // Merge logic
                         const localKeys = new Set(state.history.map(h => h.ts));
                         (cloud.history || []).forEach(item => {
                             if (!localKeys.has(item.ts)) state.history.push(item);
                         });
                         cloud.drills?.forEach(d => { if(!state.drills.includes(d)) state.drills.push(d); });
-
                     }
-
-                    state.history.sort((a,b) => a.ts - b.ts);
                     localStorage.setItem(`h_data_${state.id}`, JSON.stringify(state));
                     refreshStats();
                     updateGraph();
                 }
 
-                // Push update back to cloud (Silent)
-                fetch(endpoint, {
+                // Push to cloud (Silent)
+                fetch(proxyEndpoint, {
                     method: 'POST',
-                    mode: 'no-cors',
                     body: JSON.stringify(state)
                 });
 
-                setIndicator('online');
-                logSync("Sync Complete.");
-            } catch (err) {
-                logSync("SYNC ERROR: " + err.message);
 
+                setIndicator('online');
+            } catch (err) {
+                console.warn("Sync Error", err);
                 setIndicator('offline');
             } finally {
-                if (isForced) closeOverlay();
+                closeOverlay();
             }
         }
 
         function setIndicator(s) {
             const ind = document.getElementById('syncIndicator');
             const lbl = document.getElementById('syncLabel');
-            if (s === 'online') { ind.className = 'sync-dot bg-green-500'; lbl.innerText = "Cloud Active"; }
-            else if (s === 'pending') { ind.className = 'sync-dot bg-yellow-500 animate-pulse'; lbl.innerText = "Syncing..."; }
+            if (s === 'online') { ind.className = 'sync-dot bg-green-500'; lbl.innerText = "Synced"; }
+            else if (s === 'pending') { ind.className = 'sync-dot bg-yellow-500 animate-pulse'; lbl.innerText = "Connecting..."; }
             else { ind.className = 'sync-dot bg-red-500'; lbl.innerText = "Offline Mode"; }
         }
 
         function closeOverlay() { document.getElementById('syncOverlay').style.display = 'none'; }
 
+
         function refreshStats() {
             const days = new Set(state.history.map(h => h.date)).size;
             document.getElementById('statDays').innerText = days;
-
-            
-            const total = state.history.reduce((s, entry) => {
-                return s + Object.values(entry.data).reduce((a,b)=>a+b, 0);
-            }, 0);
+            const total = state.history.reduce((s, entry) => s + Object.values(entry.data).reduce((a,b)=>a+b, 0), 0);
             document.getElementById('statTotal').innerText = total;
 
             const base = window.location.href.split('?')[0];
             document.getElementById('magicUrl').value = `${base}?id=${state.id}`;
             document.getElementById('rawData').value = JSON.stringify(state);
 
-            // Filter Update
             const f = document.getElementById('graphFilter');
             const cur = f.value;
-            f.innerHTML = '<option value="Total">TOTAL VOLUME</option>';
+            f.innerHTML = '<option value="Total">TOTAL MADE</option>';
             state.drills.forEach(d => {
                 const o = document.createElement('option');
                 o.value = d; o.innerText = d.toUpperCase();
                 f.appendChild(o);
             });
-
             f.value = state.drills.includes(cur) ? cur : "Total";
+
         }
 
         function toggleSection(s) {
@@ -396,41 +337,34 @@
             const list = document.getElementById('logInputList');
             list.innerHTML = state.drills.map(d => `
                 <div class="dashboard-card p-4 flex justify-between items-center border-l-4 border-orange-500">
-                    <span class="font-black text-[10px] uppercase tracking-[0.2em] text-gray-400">${d}</span>
-                    <input type="number" placeholder="0" data-drill="${d}" class="shot-input bg-black w-24 p-3 rounded-2xl border border-gray-800 text-center text-orange-500 font-black focus:border-orange-500 outline-none">
+                    <span class="font-black text-[10px] uppercase tracking-widest text-gray-400">${d}</span>
+                    <input type="number" placeholder="0" data-drill="${d}" class="shot-input bg-black w-24 p-3 rounded-2xl border border-gray-800 text-center text-orange-500 font-black outline-none">
                 </div>
             `).join('');
-
         }
+
 
         function saveSession() {
             const inputs = document.querySelectorAll('.shot-input');
-            const entry = {
-                date: new Date().toISOString().split('T')[0],
-                ts: Date.now(),
-                data: {}
-            };
+            const entry = { date: new Date().toISOString().split('T')[0], ts: Date.now(), data: {} };
             let total = 0;
             inputs.forEach(i => {
                 const v = parseInt(i.value) || 0;
                 if (v > 0) { entry.data[i.getAttribute('data-drill')] = v; total += v; }
             });
-            if (total === 0) return alert("Enter shots to log!");
+            if (total === 0) return alert("Enter shots!");
             state.history.push(entry);
             persist();
             toggleSection('home');
         }
 
-
         function updateGraph() {
             const ctx = document.getElementById('mainChart').getContext('2d');
             const filter = document.getElementById('graphFilter').value;
-            const recent = state.history.slice(-12);
-            
+            const recent = state.history.slice(-10);
             const labels = recent.map(h => h.date.split('-').slice(1).join('/'));
-            const data = recent.map(h => {
-                return filter === 'Total' ? Object.values(h.data).reduce((a,b)=>a+b, 0) : (h.data[filter] || 0);
-            });
+
+            const data = recent.map(h => filter === 'Total' ? Object.values(h.data).reduce((a,b)=>a+b, 0) : (h.data[filter] || 0));
 
             if (chart) chart.destroy();
             chart = new Chart(ctx, {
@@ -438,30 +372,24 @@
                 data: {
                     labels,
                     datasets: [{
-                        data,
-                        borderColor: '#ff6b00',
-                        backgroundColor: 'rgba(255, 107, 0, 0.05)',
-
-                        fill: true, tension: 0.4, borderWidth: 4, pointRadius: 5, pointBackgroundColor: '#ff6b00', pointBorderWidth: 0
+                        data, borderColor: '#ff6b00', backgroundColor: 'rgba(255, 107, 0, 0.05)',
+                        fill: true, tension: 0.4, borderWidth: 4, pointRadius: 4, pointBackgroundColor: '#ff6b00'
                     }]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
-                    scales: {
-                        y: { display: false, beginAtZero: true },
-                        x: { grid: { display: false }, ticks: { color: '#333', font: { size: 9, weight: 'bold' } } }
-                    }
+                    scales: { y: { display: false, beginAtZero: true }, x: { grid: { display: false }, ticks: { color: '#333', font: { size: 9, weight: 'bold' } } } }
                 }
             });
         }
+
 
         function renderSettingsList() {
             const l = document.getElementById('drillEditList');
             l.innerHTML = state.drills.map((d, i) => `
                 <li class="flex justify-between items-center py-3 border-b border-gray-900">
                     <span class="text-sm font-bold text-gray-400">${d}</span>
-
                     <button onclick="delDrill(${i})" class="text-red-500 font-black p-2">✕</button>
                 </li>
             `).join('');
@@ -477,18 +405,18 @@
             }
         }
 
+
         function delDrill(i) {
             state.drills.splice(i, 1);
             persist();
             renderSettingsList();
-
         }
 
         function copyToClipboard(id) {
             const el = document.getElementById(id);
             el.select();
             document.execCommand('copy');
-            alert("Copied to clipboard!");
+            alert("Copied!");
         }
 
         function importData() {
@@ -497,17 +425,12 @@
                 const p = JSON.parse(raw);
                 state.history = p.history || state.history;
                 state.drills = p.drills || state.drills;
+
                 persist();
-                alert("Data Imported Successfully!");
+                alert("Data Synced!");
             } catch (e) {
-                alert("Invalid Data Format.");
-
+                alert("Error.");
             }
-        }
-
-        function toggleDebug() {
-            const l = document.getElementById('syncLog');
-            l.style.height = l.style.height === '200px' ? '80px' : '200px';
         }
     </script>
 </body>
