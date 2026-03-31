@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,135 +14,132 @@
             --hoops-orange: #ff6b00;
             --hoops-black: #0a0a0a;
             --hoops-gray: #1a1a1a;
+            --hoops-card: #141414;
         }
 
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
 
+            font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: var(--hoops-black);
             color: #ffffff;
             -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         .dashboard-card {
-            background: var(--hoops-gray);
-            border: 1px solid #2a2a2a;
-            border-radius: 24px;
+            background: var(--hoops-card);
+            border: 1px solid #222;
+            border-radius: 28px;
         }
 
-        .btn-main {
+        .btn-primary {
             background: var(--hoops-orange);
             color: white;
             font-weight: 800;
-            border-radius: 16px;
-            transition: all 0.1s;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(255, 107, 0, 0.2);
+
+            transition: all 0.2s;
         }
 
+        .btn-primary:active { transform: scale(0.95); opacity: 0.9; }
 
-        .btn-main:active { transform: scale(0.96); }
-
-        .stat-value {
-            background: linear-gradient(180deg, #fff 0%, #aaa 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .stat-glow {
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
         }
 
         .hidden-section { display: none; }
         
-        .sync-pulse {
+        .sync-dot {
             width: 10px; height: 10px; border-radius: 50%;
-            transition: all 0.3s;
+            transition: background 0.4s;
         }
 
-        /* Sync Notification Toast */
-        #syncToast {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            background: #22c55e; color: white; padding: 10px 20px;
-
-            border-radius: 30px; font-weight: bold; font-size: 12px;
-            z-index: 2000; opacity: 0; transition: opacity 0.3s;
-        }
-
-        /* Overlay */
         #syncOverlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
-            z-index: 3000; display: none; flex-direction: column;
+            position: fixed; inset: 0; background: rgba(0,0,0,0.98);
+            z-index: 5000; display: none; flex-direction: column;
+
             align-items: center; justify-content: center; text-align: center;
         }
 
-        .loader {
-            border: 5px solid #222; border-top: 5px solid var(--hoops-orange);
+        .spinner {
+            border: 4px solid #222; border-top: 4px solid var(--hoops-orange);
             border-radius: 50%; width: 50px; height: 50px;
-            animation: spin 1s linear infinite;
+            animation: spin 0.8s linear infinite;
         }
 
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Custom UI for inputs */
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
+<body class="max-w-md mx-auto min-h-screen flex flex-col antialiased">
 
-<body class="max-w-md mx-auto min-h-screen flex flex-col">
-
-    <!-- Syncing UI -->
+    <!-- Loading Screen -->
     <div id="syncOverlay">
-        <div class="loader mb-6"></div>
-        <h3 class="text-xl font-black mb-2 text-white">SYNCING HISTORY</h3>
-        <p class="text-gray-500 text-sm px-10">Connecting to cloud database...<br>This ensures your computer and phone match.</p>
+
+        <div class="spinner mb-6"></div>
+        <h2 class="text-2xl font-black mb-2">SYNCING VAULT</h2>
+        <p id="overlayStatus" class="text-gray-500 text-sm px-12">Connecting to secure training cloud...</p>
+        <button id="skipSyncBtn" onclick="closeOverlay()" class="mt-8 text-xs font-bold text-gray-700 uppercase tracking-widest hidden">Skip & Work Offline</button>
     </div>
 
-    <div id="syncToast">Data Synced! 🏀</div>
-
     <!-- Header -->
-    <nav class="p-6 pb-2 flex justify-between items-center">
+    <header class="p-6 pb-2 flex justify-between items-start">
         <div>
-            <h1 class="text-2xl font-black italic tracking-tighter leading-none">HOOPSPRO <span class="text-orange-600">V2.2</span></h1>
-            <div class="flex items-center gap-2 mt-2">
-                <div id="syncIndicator" class="sync-pulse bg-gray-700"></div>
-                <span id="syncText" class="text-[9px] text-gray-500 font-extrabold uppercase tracking-[0.2em]">Checking Cloud...</span>
+            <h1 class="text-2xl font-black italic tracking-tighter leading-none">HOOPSPRO <span class="text-orange-600">V2.3</span></h1>
+            <div class="flex items-center gap-2 mt-3">
+                <div id="syncIndicator" class="sync-dot bg-gray-700"></div>
+                <span id="syncLabel" class="text-[9px] text-gray-500 font-extrabold uppercase tracking-widest">Initial Boot...</span>
             </div>
-
         </div>
-        <button onclick="toggleSection('settings')" class="p-3 bg-gray-900 rounded-2xl border border-gray-800">
+        <button onclick="toggleSection('settings')" class="p-3 bg-gray-900/50 rounded-2xl border border-gray-800">
             <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
         </button>
-    </nav>
+    </header>
 
-    <main class="flex-1 p-6 pb-24 overflow-y-auto">
+
+    <main id="appBody" class="flex-1 px-6 pb-24 overflow-y-auto">
         
-        <!-- Home -->
+        <!-- Home View -->
         <div id="homeSection">
-            <!-- Quote -->
-            <section class="dashboard-card p-6 mb-6">
-                <span class="text-[10px] font-bold text-orange-500 uppercase tracking-widest block mb-3">Today's Wisdom</span>
-                <p id="quoteText" class="text-lg font-bold italic leading-tight">"..."</p>
-                <p id="authorText" class="text-xs text-gray-500 mt-2 font-bold">— ...</p>
+            <!-- Daily Quote Card -->
+            <section class="dashboard-card p-6 mb-6 relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-5">
+                    <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21L14.017 18C14.017 16.8954 14.9124 16 16.017 16H19.017C19.5693 16 20.017 15.5523 20.017 15V9C20.017 8.44772 19.5693 8 19.017 8H16.017C14.9124 8 14.017 7.10457 14.017 6V3H21.017V15C21.017 18.3137 18.3307 21 15.017 21H14.017ZM3.01709 21L3.01709 18C3.01709 16.8954 3.91252 16 5.01709 16H8.01709C8.56937 16 9.01709 15.5523 9.01709 15V9C9.01709 8.44772 8.56937 8 8.01709 8H5.01709C3.91252 8 3.01709 7.10457 3.01709 6V3H10.0171V15C10.0171 18.3137 7.33081 21 4.01709 21H3.01709Z"></path></svg>
+                </div>
+                <span class="text-[10px] font-bold text-orange-600 uppercase tracking-[0.2em] block mb-3">The Word</span>
+                <p id="quoteText" class="text-lg font-extrabold italic leading-snug tracking-tight">"Wait..."</p>
+                <p id="authorText" class="text-xs text-gray-500 mt-4 font-black">— ...</p>
             </section>
 
+            <!-- Quick Stats -->
             <div class="grid grid-cols-2 gap-4 mb-6">
                 <div class="dashboard-card p-5 text-center">
+                    <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Active Days</span>
+                    <div id="statDays" class="text-5xl font-black stat-glow mt-1">0</div>
 
-                    <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Trained</span>
-                    <div id="statDays" class="text-5xl font-black stat-value mt-1">0</div>
-                    <span class="text-[9px] text-orange-500 font-bold uppercase">Days</span>
                 </div>
                 <div class="dashboard-card p-5 text-center">
-                    <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Volume</span>
-                    <div id="statShots" class="text-5xl font-black stat-value mt-1">0</div>
-                    <span class="text-[9px] text-orange-500 font-bold uppercase">Total Made</span>
+                    <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Shots Made</span>
+                    <div id="statTotal" class="text-5xl font-black stat-glow mt-1 text-orange-500">0</div>
                 </div>
             </div>
 
-            <button onclick="toggleSection('log')" class="btn-main w-full py-5 text-xl shadow-2xl mb-8 flex justify-center items-center gap-3">
-                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path></svg>
-                RECORD WORKOUT
+            <!-- Action Button -->
+            <button onclick="toggleSection('log')" class="btn-primary w-full py-5 text-xl shadow-2xl mb-8 flex justify-center items-center gap-3">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path></svg>
+                RECORD SESSION
             </button>
 
-            <!-- Graph -->
-            <div class="dashboard-card p-5">
-                <div class="flex justify-between items-center mb-4">
+            <!-- Chart Card -->
+            <div class="dashboard-card p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-bold text-xs uppercase tracking-[0.15em] text-gray-400">Progression</h3>
+                    <select id="graphFilter" onchange="updateGraph()" class="bg-transparent text-orange-500 text-[10px] font-black border-none outline-none appearance-none">
+                        <option value="Total">TOTAL VOLUME</option>
 
-                    <h3 class="font-bold text-xs uppercase tracking-widest text-gray-500">Analytics</h3>
-                    <select id="graphFilter" onchange="renderGraph()" class="bg-transparent text-orange-500 text-[10px] font-black border-none outline-none">
-                        <option value="Total">Total Made</option>
                     </select>
                 </div>
                 <div class="h-[180px]">
@@ -150,59 +148,78 @@
             </div>
         </div>
 
-        <!-- Logging -->
+        <!-- Logging View -->
         <div id="logSection" class="hidden-section">
-            <h2 class="text-3xl font-black mb-2">The Lab.</h2>
-            <p class="text-gray-500 text-xs font-bold uppercase mb-8">No energy required, just results.</p>
-            <div id="drillInputs" class="space-y-4 mb-10"></div>
+            <h2 class="text-3xl font-black mb-1">Get to Work.</h2>
+            <p class="text-gray-500 text-xs font-bold uppercase tracking-widest mb-8">Intensity is not optional.</p>
+            <div id="logInputList" class="space-y-4 mb-10"></div>
             <div class="flex gap-3">
-                <button onclick="toggleSection('home')" class="flex-1 py-4 bg-gray-800 rounded-2xl font-bold text-gray-400">CANCEL</button>
-                <button onclick="submitWorkout()" class="flex-1 py-4 btn-main rounded-2xl font-bold">SAVE SESSION</button>
-
+                <button onclick="toggleSection('home')" class="flex-1 py-4 bg-gray-900 rounded-2xl font-bold text-gray-500">CANCEL</button>
+                <button onclick="saveSession()" class="flex-1 py-4 btn-primary rounded-2xl font-bold">LOG WORKOUT</button>
             </div>
         </div>
 
-        <!-- Settings -->
-        <div id="settingsSection" class="hidden-section">
-            <h2 class="text-3xl font-black mb-8">Settings</h2>
-            
-            <div class="dashboard-card p-6 mb-6">
-                <h3 class="text-orange-500 font-black text-xs uppercase tracking-widest mb-4">Device Linking</h3>
-                <p class="text-[10px] text-gray-500 mb-4">Text this link to your phone. When opened, it will force the phone to pull all training history from the computer.</p>
-                <div class="flex gap-2">
-                    <input type="text" id="magicLink" readonly class="bg-black/50 border border-gray-800 rounded-xl p-3 text-[10px] flex-1 font-mono text-gray-400">
-                    <button onclick="copyMagicLink()" class="px-4 btn-main rounded-xl text-[10px]">COPY</button>
-                </div>
-                <div class="mt-4 pt-4 border-t border-gray-800">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-[10px] font-bold text-gray-500 uppercase">Cloud Database ID</span>
-                        <span id="displayId" class="text-[10px] font-mono text-orange-500">...</span>
-                    </div>
 
-                    <button onclick="syncData(true)" class="w-full py-3 bg-gray-900 border border-gray-800 rounded-xl text-[10px] font-black uppercase text-gray-400 hover:text-white">Force Cloud Refresh</button>
+        <!-- Settings & Debug View -->
+        <div id="settingsSection" class="hidden-section">
+            <h2 class="text-3xl font-black mb-8">System</h2>
+            
+            <!-- Connection Diagnostics -->
+            <div class="dashboard-card p-6 mb-6">
+                <h3 class="text-orange-500 font-black text-xs uppercase tracking-widest mb-4">Sync Diagnostic</h3>
+                <div id="syncLog" class="bg-black rounded-xl p-3 font-mono text-[9px] text-gray-500 mb-4 h-20 overflow-y-auto border border-gray-800">
+                    Initializing...<br>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="sync(true)" class="flex-1 py-3 bg-gray-800 rounded-xl text-[10px] font-black uppercase text-white">Retry Cloud Sync</button>
+                    <button onclick="toggleDebug()" class="px-4 bg-gray-800 rounded-xl text-[10px] font-black">LOG</button>
                 </div>
             </div>
+
+            <!-- Magic Link -->
+            <div class="dashboard-card p-6 mb-6">
+                <h3 class="text-gray-300 font-black text-xs uppercase tracking-widest mb-2">Device Linking</h3>
+
+                <p class="text-[10px] text-gray-500 mb-4">Copy this link to the other device to share history.</p>
+                <div class="flex gap-2">
+                    <input type="text" id="magicUrl" readonly class="bg-black/50 border border-gray-800 rounded-xl p-3 text-[9px] flex-1 font-mono text-gray-500">
+                    <button onclick="copyToClipboard('magicUrl')" class="px-5 btn-primary rounded-xl text-[10px]">LINK</button>
+                </div>
+            </div>
+
+            <!-- Manual Fail-Safe -->
+            <div class="dashboard-card p-6 mb-6 border-orange-900/30">
+                <h3 class="text-red-500 font-black text-xs uppercase tracking-widest mb-2">Manual Data Recovery</h3>
+                <p class="text-[9px] text-gray-500 mb-4">If the cloud is blocked, copy this code and paste it into the other device manually.</p>
+                <textarea id="rawData" class="bg-black border border-gray-800 rounded-xl p-3 text-[8px] w-full h-16 font-mono text-gray-600 mb-3" placeholder="Paste data here to restore..."></textarea>
+                <div class="flex gap-2">
+                    <button onclick="copyToClipboard('rawData')" class="flex-1 py-2 bg-gray-900 rounded-lg text-[9px] font-bold">COPY DATA</button>
+                    <button onclick="importData()" class="flex-1 py-2 bg-gray-900 rounded-lg text-[9px] font-bold">IMPORT DATA</button>
+                </div>
+            </div>
+
+            <!-- Drills -->
 
             <div class="dashboard-card p-6 mb-8">
-                <h3 class="text-gray-400 font-black text-xs uppercase tracking-widest mb-4">Workout Drills</h3>
+                <h3 class="text-gray-400 font-black text-xs uppercase tracking-widest mb-4">Drill Manager</h3>
                 <div class="flex gap-2 mb-4">
-                    <input type="text" id="drillName" placeholder="Drill Name" class="bg-black border border-gray-800 rounded-xl p-3 text-sm flex-1 outline-none focus:border-orange-500">
-                    <button onclick="addDrill()" class="px-5 btn-main rounded-xl">+</button>
+                    <input type="text" id="newDrill" placeholder="New Drill Name" class="bg-black border border-gray-800 rounded-xl p-3 text-sm flex-1 outline-none focus:border-orange-500">
+                    <button onclick="addDrill()" class="px-5 btn-primary rounded-xl">+</button>
                 </div>
-                <ul id="drillSettingsList" class="space-y-2"></ul>
+                <ul id="drillEditList" class="space-y-2"></ul>
             </div>
 
-            <button onclick="toggleSection('home')" class="w-full py-4 bg-gray-800 rounded-2xl font-bold">RETURN TO DASHBOARD</button>
+            <button onclick="toggleSection('home')" class="w-full py-4 bg-gray-800 rounded-2xl font-bold">BACK TO DASHBOARD</button>
         </div>
     </main>
 
     <script>
         const QUOTES = [
-
             {q: "We all wait in life for things to get easier... It will never get easier. What happens is you handle hard better.", a: "Kara Lawson"},
             {q: "Make yourself a person that handles hard stuff well.", a: "Kara Lawson"},
-            {q: "Confidence is the most important thing to bring each day.", a: "Kara Lawson"},
+            {q: "You get to control who you are in adversity.", a: "Kara Lawson"},
             {q: "The big difference between a really good player and a great player is great players don’t get tired.", a: "Geno Auriemma"},
+
             {q: "You don’t rise to the occasion; you sink to the level of your training.", a: "Geno Auriemma"},
             {q: "Average is always available. Greatness is not.", a: "Geno Auriemma"}
         ];
@@ -212,218 +229,220 @@
             drills: ["Form Shooting (10)", "Free Throws", "Three Pointers"],
             history: []
         };
-        let myChart = null;
+        let chart = null;
 
         window.onload = async () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const urlId = urlParams.get('id');
+            logSync("App Booting...");
+            const params = new URLSearchParams(window.location.search);
+            const mid = params.get('id');
 
+            // Set ID
+            if (mid) {
+                state.id = mid;
 
-            // 1. Identify User
-            if (urlId) {
-                state.id = urlId;
-                localStorage.setItem('hp_active_id', urlId);
-                // Clear any local cache for this ID to ensure the cloud version wins
-                localStorage.removeItem(`hp_cache_${urlId}`);
-                await syncData(true); // Force Pull
+                localStorage.setItem('hoops_id', mid);
+                logSync("Magic Link detected: " + mid);
+                await sync(true); // Force Pull immediately
             } else {
-                state.id = localStorage.getItem('hp_active_id') || Math.random().toString(36).substr(2, 9);
-                localStorage.setItem('hp_active_id', state.id);
+                state.id = localStorage.getItem('hoops_id') || Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('hoops_id', state.id);
                 loadLocal();
+                logSync("Loaded Local Session: " + state.id);
             }
 
-            // 2. Init UI
-            updateQuote();
-            updateUI();
-            
-            // 3. Background Sync
-            syncData();
-
+            initUI();
+            sync(); // Background sync
         };
 
+        function logSync(msg) {
+            const l = document.getElementById('syncLog');
+            l.innerHTML += `> ${msg}<br>`;
+            l.scrollTop = l.scrollHeight;
+        }
+
+
+        function initUI() {
+            const day = Math.floor(Date.now() / 86400000) % QUOTES.length;
+            document.getElementById('quoteText').innerText = `"${QUOTES[day].q}"`;
+            document.getElementById('authorText').innerText = `— ${QUOTES[day].a}`;
+            refreshStats();
+            updateGraph();
+        }
+
         function loadLocal() {
-            const saved = localStorage.getItem(`hp_cache_${state.id}`);
-            if (saved) {
-                const p = JSON.parse(saved);
+            const d = localStorage.getItem(`h_data_${state.id}`);
+            if (d) {
+                const p = JSON.parse(d);
                 state.drills = p.drills || state.drills;
                 state.history = p.history || state.history;
             }
         }
 
-        function saveLocal() {
-            localStorage.setItem(`hp_cache_${state.id}`, JSON.stringify({
-                drills: state.drills,
-                history: state.history
-            }));
-            updateUI();
+        function persist() {
+            localStorage.setItem(`h_data_${state.id}`, JSON.stringify(state));
+
+            document.getElementById('rawData').value = JSON.stringify(state);
+            refreshStats();
+            sync();
         }
 
-
         /**
-         * Re-engineered Sync Engine
-         * Uses a dedicated persistent store. 
+         * ULTRA-RESILIENT SYNC ENGINE
          */
-        async function syncData(forcePull = false) {
-            updateStatus('syncing');
-            if (forcePull) document.getElementById('syncOverlay').style.display = 'flex';
+        async function sync(isForced = false) {
+            if (isForced) {
+                document.getElementById('syncOverlay').style.display = 'flex';
+                document.getElementById('skipSyncBtn').classList.add('hidden');
+                setTimeout(() => document.getElementById('skipSyncBtn').classList.remove('hidden'), 4000);
+            }
+
+            setIndicator('pending');
+            logSync("Connecting to cloud...");
+            
+            // We use a public, high-uptime storage relay
 
             const endpoint = `https://kvstore.io{state.id}`;
 
             try {
-                // PULL
-                const getRes = await fetch(endpoint);
-                if (getRes.ok) {
-                    const cloud = await getRes.json();
-                    
-                    if (forcePull) {
-                        // Override local entirely if using a Magic Link
-                        state.history = cloud.history || [];
+                const res = await fetch(endpoint, { cache: 'no-store' });
+                
+                if (res.ok) {
+                    const cloud = await res.json();
+                    logSync("Cloud data retrieved successfully.");
 
+                    if (isForced) {
+                        state.history = cloud.history || [];
                         state.drills = cloud.drills || state.drills;
                     } else {
-                        // Merge logic: keep cloud records we don't have
+                        // Merge logic
                         const localKeys = new Set(state.history.map(h => h.ts));
                         (cloud.history || []).forEach(item => {
                             if (!localKeys.has(item.ts)) state.history.push(item);
                         });
                         cloud.drills?.forEach(d => { if(!state.drills.includes(d)) state.drills.push(d); });
+
                     }
-                    
+
                     state.history.sort((a,b) => a.ts - b.ts);
-                    saveLocal(); // Persist merged data
+                    localStorage.setItem(`h_data_${state.id}`, JSON.stringify(state));
+                    refreshStats();
+                    updateGraph();
                 }
 
-                // PUSH (Silent update)
+                // Push update back to cloud (Silent)
                 fetch(endpoint, {
                     method: 'POST',
                     mode: 'no-cors',
                     body: JSON.stringify(state)
-
                 });
 
-                updateStatus('online');
-                if (forcePull) showToast("Cloud Data Loaded!");
-            } catch (e) {
-                console.warn("Offline.", e);
-                updateStatus('offline');
+                setIndicator('online');
+                logSync("Sync Complete.");
+            } catch (err) {
+                logSync("SYNC ERROR: " + err.message);
+
+                setIndicator('offline');
             } finally {
-                document.getElementById('syncOverlay').style.display = 'none';
+                if (isForced) closeOverlay();
             }
         }
 
-        function updateStatus(s) {
+        function setIndicator(s) {
             const ind = document.getElementById('syncIndicator');
-            const txt = document.getElementById('syncText');
-            if (s === 'online') { ind.className = 'sync-pulse bg-green-500'; txt.innerText = "Synced with Cloud"; }
-            else if (s === 'syncing') { ind.className = 'sync-pulse bg-yellow-500'; txt.innerText = "Syncing..."; }
-            else { ind.className = 'sync-pulse bg-red-500'; txt.innerText = "Offline Mode"; }
+            const lbl = document.getElementById('syncLabel');
+            if (s === 'online') { ind.className = 'sync-dot bg-green-500'; lbl.innerText = "Cloud Active"; }
+            else if (s === 'pending') { ind.className = 'sync-dot bg-yellow-500 animate-pulse'; lbl.innerText = "Syncing..."; }
+            else { ind.className = 'sync-dot bg-red-500'; lbl.innerText = "Offline Mode"; }
         }
 
+        function closeOverlay() { document.getElementById('syncOverlay').style.display = 'none'; }
 
-        function updateQuote() {
-            const day = Math.floor(Date.now() / 86400000) % QUOTES.length;
-            document.getElementById('quoteText').innerText = `"${QUOTES[day].q}"`;
-            document.getElementById('authorText').innerText = `— ${QUOTES[day].a}`;
-        }
+        function refreshStats() {
+            const days = new Set(state.history.map(h => h.date)).size;
+            document.getElementById('statDays').innerText = days;
 
-        function updateUI() {
-            // Stats
-            const uniqueDays = new Set(state.history.map(h => h.date)).size;
-            document.getElementById('statDays').innerText = uniqueDays;
             
-            const totalMade = state.history.reduce((sum, entry) => {
-                return sum + Object.values(entry.data).reduce((a,b)=>a+b, 0);
+            const total = state.history.reduce((s, entry) => {
+                return s + Object.values(entry.data).reduce((a,b)=>a+b, 0);
             }, 0);
-            document.getElementById('statShots').innerText = totalMade;
+            document.getElementById('statTotal').innerText = total;
 
-            // Share URL
             const base = window.location.href.split('?')[0];
-            document.getElementById('magicLink').value = `${base}?id=${state.id}`;
+            document.getElementById('magicUrl').value = `${base}?id=${state.id}`;
+            document.getElementById('rawData').value = JSON.stringify(state);
 
-            document.getElementById('displayId').innerText = state.id.toUpperCase();
-
-            // Filters
-            const filter = document.getElementById('graphFilter');
-            const current = filter.value;
-            filter.innerHTML = '<option value="Total">Total Made</option>';
+            // Filter Update
+            const f = document.getElementById('graphFilter');
+            const cur = f.value;
+            f.innerHTML = '<option value="Total">TOTAL VOLUME</option>';
             state.drills.forEach(d => {
-                const opt = document.createElement('option');
-                opt.value = d; opt.innerText = d;
-                filter.appendChild(opt);
+                const o = document.createElement('option');
+                o.value = d; o.innerText = d.toUpperCase();
+                f.appendChild(o);
             });
-            filter.value = state.drills.includes(current) ? current : "Total";
 
-            renderGraph();
+            f.value = state.drills.includes(cur) ? cur : "Total";
         }
 
-        function toggleSection(sec) {
-            document.getElementById('homeSection').style.display = sec === 'home' ? 'block' : 'none';
-            document.getElementById('logSection').style.display = sec === 'log' ? 'block' : 'none';
-
-            document.getElementById('settingsSection').style.display = sec === 'settings' ? 'block' : 'none';
-            if (sec === 'log') renderInputs();
-            if (sec === 'settings') renderSettingsDrills();
+        function toggleSection(s) {
+            document.getElementById('homeSection').style.display = s === 'home' ? 'block' : 'none';
+            document.getElementById('logSection').style.display = s === 'log' ? 'block' : 'none';
+            document.getElementById('settingsSection').style.display = s === 'settings' ? 'block' : 'none';
+            if (s === 'log') renderLogInputs();
+            if (s === 'settings') renderSettingsList();
         }
 
-        function renderInputs() {
-            const list = document.getElementById('drillInputs');
+        function renderLogInputs() {
+            const list = document.getElementById('logInputList');
             list.innerHTML = state.drills.map(d => `
-                <div class="dashboard-card p-4 flex justify-between items-center border-l-4 border-orange-600">
-                    <span class="font-black text-[10px] uppercase tracking-widest text-gray-400">${d}</span>
+                <div class="dashboard-card p-4 flex justify-between items-center border-l-4 border-orange-500">
+                    <span class="font-black text-[10px] uppercase tracking-[0.2em] text-gray-400">${d}</span>
                     <input type="number" placeholder="0" data-drill="${d}" class="shot-input bg-black w-24 p-3 rounded-2xl border border-gray-800 text-center text-orange-500 font-black focus:border-orange-500 outline-none">
                 </div>
             `).join('');
+
         }
 
-        function submitWorkout() {
+        function saveSession() {
             const inputs = document.querySelectorAll('.shot-input');
             const entry = {
                 date: new Date().toISOString().split('T')[0],
-
                 ts: Date.now(),
                 data: {}
             };
             let total = 0;
-
             inputs.forEach(i => {
                 const v = parseInt(i.value) || 0;
-                if (v > 0) {
-                    entry.data[i.getAttribute('data-drill')] = v;
-                    total += v;
-                }
+                if (v > 0) { entry.data[i.getAttribute('data-drill')] = v; total += v; }
             });
-
-            if (total === 0) return alert("Log at least one shot!");
-
+            if (total === 0) return alert("Enter shots to log!");
             state.history.push(entry);
-            saveLocal();
-            syncData(); // Push to cloud
-            showToast("Workout Logged!");
-
+            persist();
             toggleSection('home');
         }
 
-        function renderGraph() {
+
+        function updateGraph() {
             const ctx = document.getElementById('mainChart').getContext('2d');
             const filter = document.getElementById('graphFilter').value;
-            const recent = state.history.slice(-10);
+            const recent = state.history.slice(-12);
             
             const labels = recent.map(h => h.date.split('-').slice(1).join('/'));
-            const values = recent.map(h => {
+            const data = recent.map(h => {
                 return filter === 'Total' ? Object.values(h.data).reduce((a,b)=>a+b, 0) : (h.data[filter] || 0);
             });
 
-            if (myChart) myChart.destroy();
-            myChart = new Chart(ctx, {
+            if (chart) chart.destroy();
+            chart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels,
                     datasets: [{
-
-                        data: values,
+                        data,
                         borderColor: '#ff6b00',
                         backgroundColor: 'rgba(255, 107, 0, 0.05)',
-                        fill: true, tension: 0.4, borderWidth: 4, pointRadius: 4, pointBackgroundColor: '#ff6b00', pointBorderWidth: 0
+
+                        fill: true, tension: 0.4, borderWidth: 4, pointRadius: 5, pointBackgroundColor: '#ff6b00', pointBorderWidth: 0
                     }]
                 },
                 options: {
@@ -431,55 +450,64 @@
                     plugins: { legend: { display: false } },
                     scales: {
                         y: { display: false, beginAtZero: true },
-                        x: { grid: { display: false }, ticks: { color: '#444', font: { size: 9, weight: 'bold' } } }
+                        x: { grid: { display: false }, ticks: { color: '#333', font: { size: 9, weight: 'bold' } } }
                     }
                 }
             });
         }
 
-        function renderSettingsDrills() {
-            const l = document.getElementById('drillSettingsList');
-
+        function renderSettingsList() {
+            const l = document.getElementById('drillEditList');
             l.innerHTML = state.drills.map((d, i) => `
                 <li class="flex justify-between items-center py-3 border-b border-gray-900">
-                    <span class="text-sm font-bold text-gray-300">${d}</span>
-                    <button onclick="deleteDrill(${i})" class="text-red-500 font-black p-2">✕</button>
+                    <span class="text-sm font-bold text-gray-400">${d}</span>
+
+                    <button onclick="delDrill(${i})" class="text-red-500 font-black p-2">✕</button>
                 </li>
             `).join('');
         }
 
         function addDrill() {
-            const val = document.getElementById('drillName').value.trim();
-            if (val && !state.drills.includes(val)) {
-                state.drills.push(val);
-                document.getElementById('drillName').value = '';
-                saveLocal();
-                renderSettingsDrills();
-                syncData();
+            const v = document.getElementById('newDrill').value.trim();
+            if (v && !state.drills.includes(v)) {
+                state.drills.push(v);
+                document.getElementById('newDrill').value = '';
+                persist();
+                renderSettingsList();
             }
         }
 
-
-        function deleteDrill(i) {
+        function delDrill(i) {
             state.drills.splice(i, 1);
-            saveLocal();
-            renderSettingsDrills();
-            syncData();
+            persist();
+            renderSettingsList();
+
         }
 
-        function copyMagicLink() {
-            const input = document.getElementById('magicLink');
-            input.select();
+        function copyToClipboard(id) {
+            const el = document.getElementById(id);
+            el.select();
             document.execCommand('copy');
-            showToast("Magic Link Copied!");
+            alert("Copied to clipboard!");
         }
 
-        function showToast(m) {
-            const t = document.getElementById('syncToast');
-            t.innerText = m;
-            t.style.opacity = '1';
-            setTimeout(() => t.style.opacity = '0', 2500);
+        function importData() {
+            const raw = document.getElementById('rawData').value;
+            try {
+                const p = JSON.parse(raw);
+                state.history = p.history || state.history;
+                state.drills = p.drills || state.drills;
+                persist();
+                alert("Data Imported Successfully!");
+            } catch (e) {
+                alert("Invalid Data Format.");
 
+            }
+        }
+
+        function toggleDebug() {
+            const l = document.getElementById('syncLog');
+            l.style.height = l.style.height === '200px' ? '80px' : '200px';
         }
     </script>
 </body>
