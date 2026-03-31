@@ -1,398 +1,502 @@
+# HoopTrack - Basketball Practice App
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HoopsPro Elite</title>
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <!-- UI Frameworks -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HoopTrack | Elite Practice Tracking</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons UMD build -->
+    <script src="https://cdn.jsdelivr.net/npm/lucide/dist/umd/lucide.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap');
-        
-        :root {
-            --primary: #ff5500;
-            --bg: #050505;
-            --card: #0f0f0f;
-
-        }
-
         body {
-            font-family: 'Space Grotesk', sans-serif;
-            background-color: var(--bg);
-            color: #fff;
-            -webkit-tap-highlight-color: transparent;
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
         }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
 
-        .hoops-card {
-            background: var(--card);
-            border: 1px solid #1a1a1a;
-            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
-
-        .btn-main {
-            background: var(--primary);
-            color: white;
-            font-weight: 700;
-
-            border-radius: 20px;
-            box-shadow: 0 8px 30px rgba(255, 85, 0, 0.2);
+        .orange-gradient {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
         }
-
-        .btn-main:active { transform: scale(0.96); }
-
-        .hidden { display: none; }
-        
-        .status-pill {
-            padding: 4px 12px;
-            border-radius: 100px;
-            font-size: 10px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
         }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
 
-        .chart-container { position: relative; height: 220px; width: 100%; }
+            border-radius: 10px;
+        }
+        /* Animation for new items */
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
-
-<body class="max-w-md mx-auto min-h-screen flex flex-col p-6">
+<body class="pb-24">
 
     <!-- Header -->
-    <header class="flex justify-between items-start mb-8">
-        <div>
-            <h1 class="text-3xl font-bold italic tracking-tighter leading-none">HOOPSPRO <span class="text-orange-600">ELITE</span></h1>
-            <div id="syncStatus" class="flex items-center gap-2 mt-4">
-                <div id="statusDot" class="w-2 h-2 rounded-full bg-red-500"></div>
-                <span id="statusLabel" class="status-pill bg-gray-900 text-gray-500">Connecting...</span>
+    <header class="orange-gradient text-white pt-8 pb-12 px-6 rounded-b-[2rem] shadow-lg sticky top-0 z-50">
+        <div class="max-w-md mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-800 tracking-tight text-white">HoopTrack</h1>
+
+                <p class="text-orange-100 opacity-90 text-sm font-medium">Handle Hard Better.</p>
             </div>
+            <button onclick="toggleSettings()" class="p-2 bg-white/20 rounded-full hover:bg-white/30 transition-colors">
+                <i data-lucide="settings" class="w-6 h-6"></i>
+            </button>
         </div>
-        <button onclick="showPage('settings')" class="p-4 bg-zinc-900 rounded-2xl border border-zinc-800">
-            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
-        </button>
     </header>
 
-    <main class="flex-1 pb-24">
+    <main class="max-w-md mx-auto px-6 -mt-6">
         
-        <!-- DASHBOARD PAGE -->
+        <!-- Daily Inspiration Quote (Now Random on Load) -->
+        <section class="glass-card rounded-2xl p-6 shadow-sm mb-6 border-l-4 border-orange-500 fade-in">
+            <i data-lucide="quote" class="w-5 h-5 text-orange-500 mb-2 opacity-50"></i>
+            <p id="daily-quote" class="text-slate-800 font-semibold italic text-lg leading-snug">
+                "Loading inspiration..."
+            </p>
+            <p id="quote-author" class="text-slate-500 text-sm mt-2 font-bold uppercase tracking-wider">— Author</p>
+        </section>
 
-        <div id="page-dashboard">
-            <section class="hoops-card p-7 mb-6 relative overflow-hidden">
-                <span class="text-[10px] font-bold text-orange-600 uppercase tracking-widest block mb-4">Coach's Quote</span>
-                <p id="quoteText" class="text-lg font-bold italic leading-tight">"..."</p>
-                <p id="authorText" class="text-xs text-gray-500 mt-5 font-bold">— Kara Lawson</p>
-            </section>
 
-            <div class="grid grid-cols-2 gap-4 mb-8">
-                <div class="hoops-card p-6 text-center">
-                    <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Training Days</span>
-                    <div id="statDays" class="text-5xl font-bold mt-2">0</div>
-                </div>
-                <div class="hoops-card p-6 text-center">
-                    <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Total Makes</span>
-                    <div id="statTotal" class="text-5xl font-bold mt-2 text-orange-500">0</div>
-                </div>
+        <!-- Stats Overview -->
+        <section class="grid grid-cols-2 gap-4 mb-6">
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+                <p class="text-slate-400 text-xs font-bold uppercase">Total Makes</p>
+                <h3 id="total-makes" class="text-2xl font-800 text-slate-800">0</h3>
             </div>
-
-            <button onclick="showPage('log')" class="btn-main w-full py-6 text-xl mb-10 flex justify-center items-center gap-3">
-
-                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path></svg>
-                RECORD SESSION
-            </button>
-
-            <div class="hoops-card p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="font-bold text-xs uppercase tracking-widest text-gray-500">Analytics</h3>
-                    <select id="graphFilter" onchange="updateChart()" class="bg-transparent text-orange-500 text-[10px] font-bold outline-none cursor-pointer">
-                        <option value="Total">ALL DRILLS</option>
-                    </select>
-                </div>
-                <div class="chart-container">
-                    <canvas id="mainChart"></canvas>
-                </div>
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+                <p class="text-slate-400 text-xs font-bold uppercase">Avg Accuracy</p>
+                <h3 id="avg-accuracy" class="text-2xl font-800 text-orange-600">0%</h3>
             </div>
-        </div>
+        </section>
 
-        <!-- LOGGING PAGE -->
-        <div id="page-log" class="hidden">
-
-            <h2 class="text-4xl font-bold mb-10 tracking-tighter italic">Log Session</h2>
-            <div id="drillInputs" class="space-y-4 mb-12"></div>
-            <div class="flex gap-4">
-                <button onclick="showPage('dashboard')" class="flex-1 py-5 bg-zinc-900 rounded-3xl font-bold text-gray-500 uppercase text-xs">Cancel</button>
-                <button onclick="saveWorkout()" class="flex-1 py-5 btn-main rounded-3xl font-bold uppercase text-xs">Submit</button>
-            </div>
-        </div>
-
-        <!-- SETTINGS PAGE -->
-        <div id="page-settings" class="hidden">
-            <h2 class="text-4xl font-bold mb-10 tracking-tighter italic">System</h2>
-            
-            <div class="hoops-card p-6 mb-6">
-                <h3 class="text-orange-500 font-bold text-xs uppercase tracking-widest mb-4">Cloud Linking</h3>
-                <p class="text-[10px] text-gray-500 mb-6">Enter your <b>Family Key</b> to sync results across devices.</p>
-                <div class="flex gap-2">
-                    <input type="text" id="familyKey" placeholder="e.g. MyFamilyHoops" class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 text-sm flex-1 outline-none focus:border-orange-500 transition-all">
-                    <button onclick="saveKey()" class="px-6 btn-main rounded-2xl text-[10px]">SAVE</button>
-                </div>
+        <!-- Progress Graph -->
+        <section class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-700 text-slate-800">Progress</h2>
+                <select id="chart-filter" onchange="updateChart()" class="text-xs font-bold bg-slate-100 px-2 py-1 rounded-lg outline-none text-slate-600 border-none">
+                    <option value="all">All Drills</option>
+                </select>
 
             </div>
-
-            <div class="hoops-card p-6 mb-10">
-                <h3 class="text-gray-500 font-bold text-xs uppercase tracking-widest mb-6">Manage Drills</h3>
-                <div class="flex gap-2 mb-6">
-                    <input type="text" id="newDrill" placeholder="Drill Name" class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 text-sm flex-1 outline-none">
-                    <button onclick="addDrill()" class="px-6 btn-main rounded-2xl font-bold text-xl">+</button>
-                </div>
-                <ul id="drillList" class="space-y-3"></ul>
+            <div class="chart-container">
+                <canvas id="progressChart"></canvas>
             </div>
+        </section>
 
-            <button onclick="showPage('dashboard')" class="w-full py-5 bg-zinc-900 rounded-3xl font-bold text-xs uppercase text-gray-400">Back to Dashboard</button>
-        </div>
+        <!-- Drills List -->
+        <section class="mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-800 text-slate-800">My Drills</h2>
+                <button onclick="openModal('add-drill-modal')" class="text-sm font-bold text-orange-600 flex items-center gap-1 hover:scale-105 transition-transform">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i> Add New
+                </button>
+            </div>
+            <div id="drills-list" class="space-y-4">
+                <!-- Drills dynamic injection -->
+            </div>
+        </section>
+
+
     </main>
 
-    <script>
-        const QUOTES = [
-            {q: "We all wait in life for things to get easier... It will never get easier. What happens is you handle hard better.", a: "Kara Lawson"},
-            {q: "Make yourself a person that handles hard stuff well.", a: "Kara Lawson"},
+    <!-- Navigation -->
+    <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-sm bg-slate-900/90 backdrop-blur-lg rounded-full px-6 py-4 flex justify-around items-center shadow-2xl z-50">
+        <button onclick="showSection('dashboard')" class="text-orange-500">
+            <i data-lucide="layout-dashboard"></i>
+        </button>
+        <button onclick="openModal('log-session-modal')" class="bg-orange-500 p-4 rounded-full -mt-12 border-4 border-slate-50 shadow-lg text-white hover:bg-orange-600 transition-colors">
+            <i data-lucide="plus" class="w-8 h-8"></i>
+        </button>
+        <button onclick="showSection('history')" class="text-slate-400">
+            <i data-lucide="history"></i>
+        </button>
+    </nav>
 
-            {q: "Great players don’t get tired.", a: "Geno Auriemma"},
-            {q: "Average is always available. Greatness is not.", a: "Geno Auriemma"},
-            {q: "You don’t rise to the occasion; you sink to the level of your training.", a: "Geno Auriemma"}
+    <!-- Modal: Add Drill -->
+    <div id="add-drill-modal" class="hidden fixed inset-0 bg-black/60 z-[100] flex items-end sm:items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-8 shadow-2xl">
+            <h2 class="text-2xl font-800 text-slate-800 mb-2">New Drill</h2>
+
+            <p class="text-slate-500 mb-6">Give your practice drill a specific name.</p>
+            <input id="new-drill-name" type="text" placeholder="e.g. Corner 3s" class="w-full bg-slate-100 p-4 rounded-xl mb-4 outline-none focus:ring-2 ring-orange-500 text-slate-800 font-medium">
+            <div class="flex gap-4">
+                <button onclick="closeModal('add-drill-modal')" class="flex-1 p-4 font-bold text-slate-400">Cancel</button>
+                <button onclick="saveDrill()" class="flex-1 orange-gradient p-4 rounded-xl text-white font-bold shadow-md">Add Drill</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Log Session -->
+    <div id="log-session-modal" class="hidden fixed inset-0 bg-black/60 z-[100] flex items-end sm:items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-8">
+            <h2 class="text-2xl font-800 text-slate-800 mb-2">Log Session</h2>
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="text-xs font-bold text-slate-400 uppercase">Select Drill</label>
+                    <select id="log-drill-select" class="w-full bg-slate-100 p-4 rounded-xl outline-none mt-1 text-slate-800 font-medium"></select>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+
+                    <div>
+                        <label class="text-xs font-bold text-slate-400 uppercase">Makes</label>
+                        <input id="log-makes" type="number" min="0" value="0" class="w-full bg-slate-100 p-4 rounded-xl mt-1 outline-none text-slate-800">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-slate-400 uppercase">Misses</label>
+                        <input id="log-misses" type="number" min="0" value="0" class="w-full bg-slate-100 p-4 rounded-xl mt-1 outline-none text-slate-800">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-400 uppercase">Practice Time (Mins)</label>
+                    <input id="log-time" type="number" min="1" value="15" class="w-full bg-slate-100 p-4 rounded-xl mt-1 outline-none text-slate-800">
+                </div>
+            </div>
+            <div class="flex gap-4">
+                <button onclick="closeModal('log-session-modal')" class="flex-1 p-4 font-bold text-slate-400">Cancel</button>
+                <button onclick="saveSession()" class="flex-1 orange-gradient p-4 rounded-xl text-white font-bold shadow-md">Record Stats</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal: Settings -->
+    <div id="settings-modal" class="hidden fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl">
+            <h2 class="text-2xl font-800 text-slate-800 mb-6">App Settings</h2>
+            <div class="space-y-4">
+                <button onclick="exportData()" class="w-full p-4 bg-slate-100 rounded-xl font-bold flex items-center justify-between hover:bg-slate-200 transition-colors">
+                    <span>Export Data (JSON)</span>
+                    <i data-lucide="download" class="w-5 h-5 text-slate-400"></i>
+                </button>
+                <label class="w-full p-4 bg-slate-100 rounded-xl font-bold flex items-center justify-between cursor-pointer hover:bg-slate-200 transition-colors">
+                    <span>Import Data</span>
+                    <i data-lucide="upload" class="w-5 h-5 text-slate-400"></i>
+                    <input type="file" id="import-file" class="hidden" onchange="importData(event)">
+                </label>
+                <button onclick="resetData()" class="w-full p-4 text-red-500 font-bold border border-red-100 rounded-xl hover:bg-red-50 transition-colors">Reset All Progress</button>
+            </div>
+            <button onclick="closeModal('settings-modal')" class="w-full mt-6 p-4 text-slate-400 font-bold">Close</button>
+
+        </div>
+    </div>
+
+    <script>
+        // --- Data ---
+        const quotes = [
+            { quote: "We all wait in life for things to get easier... It will never get easier. What happens is you handle hard better.", author: "Kara Lawson" },
+            { quote: "Make yourself a person that handles hard stuff well.", author: "Kara Lawson" },
+            { quote: "If you have a meaningful pursuit in life, it will never be easy.", author: "Kara Lawson" },
+            { quote: "You don’t get to control the length of your adversity... You get to control who you are in it.", author: "Kara Lawson" },
+            { quote: "Most people in life quit before the turn... they stop before it was just about to turn.", author: "Kara Lawson" },
+            { quote: "Confidence is the most important thing to bring each day.", author: "Kara Lawson" },
+            { quote: "Being naked with confidence is preferable to wearing designer clothes without it.", author: "Kara Lawson" },
+            { quote: "Responding to a loss by giving less effort perpetuates a losing cycle.", author: "Kara Lawson" },
+            { quote: "Don't fall into the trap of giving less than your best when you're upset about a result.", author: "Kara Lawson" },
+            { quote: "If you go around waiting for stuff to get easier in life, it's never going to happen.", author: "Kara Lawson" },
+            { quote: "Focus on the present. Focus on the task at hand and come up with a solution to help you win.", author: "Kara Lawson" },
+            { quote: "Short-term failure is not defeat... Learn from those failures, and make the choice to get back up.", author: "Kara Lawson" },
+            { quote: "Stick to what's real and true. Do the work.", author: "Kara Lawson" },
+
+            { quote: "We train moments, not movements.", author: "Kara Lawson" },
+            { quote: "It's in times of rapid change that leadership is needed most.", author: "Kara Lawson" },
+            { quote: "Don't get discouraged when things are hard; it is supposed to be hard.", author: "Kara Lawson" },
+            { quote: "The more you're tested in your ability to adapt... the more you've added something to your bank account.", author: "Kara Lawson" },
+            { quote: "You have to come out of there with some sort of positive deposit.", author: "Kara Lawson" },
+            { quote: "When you know what your purpose is... you're solid in it.", author: "Kara Lawson" },
+            { quote: "Waiting for things to be easy will lead to inaction and missed opportunities.", author: "Kara Lawson" },
+            { quote: "The big difference between a really good player and a great player is great players don’t get tired.", author: "Geno Auriemma" },
+            { quote: "You don’t rise to the occasion; you sink to the level of your training.", author: "Geno Auriemma" },
+            { quote: "Average is always available. Greatness is not.", author: "Geno Auriemma" },
+            { quote: "I don't hire good coaches, I hire good people.", author: "Geno Auriemma" },
+            { quote: "One of the biggest attributes that resilient leaders have is the ability to listen.", author: "Geno Auriemma" },
+            { quote: "Listen more than you talk.", author: "Geno Auriemma" },
+            { quote: "Fear of failure is a motivator, but not as great a motivator as the desire for success.", author: "Geno Auriemma" },
+            { quote: "If you want an A you have to do even more work... you have to sacrifice.", author: "Geno Auriemma" },
+            { quote: "If you accept making mistakes because it's a game... the only thing you learned is how to make excuses.", author: "Geno Auriemma" },
+            { quote: "Expectations and culture start at the top.", author: "Geno Auriemma" },
+            { quote: "Without trust and communication... you're not finding a solution. You're finding somebody to blame.", author: "Geno Auriemma" },
+            { quote: "Sometimes the wave breaks on you early... Sometimes you ride the wave all the way into the shore.", author: "Geno Auriemma" },
+
+            { quote: "With the absence of pressure it's hard to do great things.", author: "Geno Auriemma" },
+            { quote: "We put a premium on body language... if your body language is bad, you won't ever get in the game.", author: "Geno Auriemma" },
+            { quote: "Uncertainty is great for the game.", author: "Geno Auriemma" },
+            { quote: "I demand sometimes more than they can give. But I don't know what that is until I find out they can't.", author: "Geno Auriemma" },
+            { quote: "The things we fall back on... is that every day we try to live up to that potential.", author: "Geno Auriemma" },
+            { quote: "It takes a certain kind of kid to play here... the kind of kids that can block out all that stuff.", author: "Geno Auriemma" },
+            { quote: "It's not about them making ME great; it's about what I can do for THEM.", author: "Geno Auriemma" },
+            { quote: "We were hurt like hell, but that doesn't mean we have to stay there. I chose not to stay there.", author: "Geno Auriemma" }
         ];
 
-        // CONFIG UPDATED WITH USER KEYS
-        const firebaseConfig = {
-            apiKey: "AIzaSyBb_-4N9xnioprkZa6OLtOCUWg3iDvpVuY",
-            authDomain: "hoopspro-227de.firebaseapp.com",
-            projectId: "hoopspro-227de",
-            storageBucket: "hoopspro-227de.firebasestorage.app",
-            messagingSenderId: "647339514982",
-            appId: "1:647339514982:web:9f5af3583d7253d0bfe1a7",
-            measurementId: "G-NKY90WLSKD"
+        let state = JSON.parse(localStorage.getItem('hooptrack_data')) || {
+            drills: [
+                { id: 1, name: 'Free Throws', color: '#f97316' },
+                { id: 2, name: 'Mid-Range Jumpers', color: '#3b82f6' }
+            ],
+            sessions: []
         };
 
-        let state = {
-            familyKey: localStorage.getItem('hoops_family_key') || '',
-            drills: ["Form Shooting (10)", "Free Throws", "Mikan Drill"],
+        let myChart = null;
 
-            history: []
-        };
-        let db = null;
-        let chart = null;
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        db = firebase.firestore();
-
+        // --- Init ---
         window.onload = () => {
-            loadLocal();
-            initQuotes();
-            if (state.familyKey) {
-                document.getElementById('familyKey').value = state.familyKey;
-                startSync();
-            } else {
-                updateStatus('offline');
-            }
-            refreshStats();
-
-            updateChart();
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            setRandomQuote(); // Requirement 1: Rotate on load
+            renderDrills();
+            initChart();
+            updateStats();
+            populateDrillSelects();
         };
 
-        function initQuotes() {
-            const dayIdx = Math.floor(Date.now() / 86400000) % QUOTES.length;
-            document.getElementById('quoteText').innerText = `"${QUOTES[dayIdx].q}"`;
-            document.getElementById('authorText').innerText = `— ${QUOTES[dayIdx].a}`;
+        function setRandomQuote() {
+            const quoteIdx = Math.floor(Math.random() * quotes.length);
+            const q = quotes[quoteIdx];
+            document.getElementById('daily-quote').innerText = `"${q.quote}"`;
+            document.getElementById('quote-author').innerText = `— ${q.author}`;
         }
 
-        function showPage(p) {
-            document.querySelectorAll('main > div').forEach(d => d.classList.add('hidden'));
-            document.getElementById('page-' + p).classList.remove('hidden');
-            if (p === 'log') renderDrillInputs();
-            if (p === 'settings') renderDrillList();
+        // --- Core Logic ---
+        function saveState() {
+
+            localStorage.setItem('hooptrack_data', JSON.stringify(state));
+            updateStats();
+            updateChart();
+            renderDrills();
         }
 
-        function saveKey() {
-            const val = document.getElementById('familyKey').value.trim();
-            if (val) {
+        // Requirement 2: Ability to add new drills as needed
+        function saveDrill() {
+            const name = document.getElementById('new-drill-name').value.trim();
+            if (!name) return;
+            
+            const newDrill = {
+                id: Date.now(),
+                name: name,
+                color: `hsl(${Math.random() * 360}, 70%, 50%)`
+            };
+            
+            state.drills.push(newDrill);
+            document.getElementById('new-drill-name').value = '';
 
-                state.familyKey = val;
-                localStorage.setItem('hoops_family_key', val);
-                startSync();
-            }
+            closeModal('add-drill-modal');
+            populateDrillSelects();
+            saveState();
         }
 
-        function updateStatus(s) {
-            const dot = document.getElementById('statusDot');
-            const lbl = document.getElementById('statusLabel');
-            if (s === 'online') {
-                dot.className = 'w-2 h-2 rounded-full bg-green-500';
-                lbl.innerText = "Online";
-                lbl.className = 'status-pill bg-green-900/20 text-green-500';
-            } else if (s === 'pending') {
-                dot.className = 'w-2 h-2 rounded-full bg-yellow-500 animate-pulse';
-                lbl.innerText = "Syncing...";
-                lbl.className = 'status-pill bg-yellow-900/20 text-yellow-500';
-            } else {
-                dot.className = 'w-2 h-2 rounded-full bg-red-500';
+        function saveSession() {
+            const drillId = parseInt(document.getElementById('log-drill-select').value);
+            const makes = parseInt(document.getElementById('log-makes').value) || 0;
+            const misses = parseInt(document.getElementById('log-misses').value) || 0;
+            const time = parseInt(document.getElementById('log-time').value) || 0;
 
-                lbl.innerText = "Offline";
-                lbl.className = 'status-pill bg-red-900/20 text-red-500';
-            }
+            const session = {
+                id: Date.now(),
+                drillId,
+                makes,
+                misses,
+                time,
+                date: new Date().toISOString()
+            };
+
+
+            state.sessions.push(session);
+            // Reset fields
+            document.getElementById('log-makes').value = 0;
+            document.getElementById('log-misses').value = 0;
+            
+            closeModal('log-session-modal');
+            saveState();
         }
 
-        function startSync() {
-            if (!db || !state.familyKey) return;
-            updateStatus('pending');
-
-            db.collection("trainers").doc(state.familyKey).onSnapshot((doc) => {
-                if (doc.exists) {
-                    const data = doc.data();
-                    state.history = data.history || [];
-                    state.drills = data.drills || state.drills;
-                    saveLocal();
-                    refreshStats();
-                    updateChart();
-                    updateStatus('online');
-                } else {
-
-                    pushToCloud();
-                    updateStatus('online');
-                }
-            }, (error) => {
-                console.error("Sync Error:", error);
-                updateStatus('offline');
-            });
-        }
-
-        function pushToCloud() {
-            if (!db || !state.familyKey) return;
-            db.collection("trainers").doc(state.familyKey).set({
-                history: state.history,
-                drills: state.drills,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-        }
-
-        function loadLocal() {
-
-            const data = localStorage.getItem('hoops_local_data');
-            if (data) {
-                const parsed = JSON.parse(data);
-                state.history = parsed.history || [];
-                state.drills = parsed.drills || state.drills;
-            }
-        }
-
-        function saveLocal() {
-            localStorage.setItem('hoops_local_data', JSON.stringify(state));
-            refreshStats();
-        }
-
-        function refreshStats() {
-            const uniqueDays = new Set(state.history.map(h => h.date)).size;
-            document.getElementById('statDays').innerText = uniqueDays;
-            const total = state.history.reduce((acc, entry) => acc + Object.values(entry.data).reduce((a, b) => a + b, 0), 0);
-            document.getElementById('statTotal').innerText = total;
-
-
-            const filter = document.getElementById('graphFilter');
-            const current = filter.value;
-            filter.innerHTML = '<option value="Total">ALL DRILLS</option>';
-            state.drills.forEach(d => {
-                const opt = document.createElement('option');
-                opt.value = d; opt.innerText = d.toUpperCase();
-                filter.appendChild(opt);
-            });
-            filter.value = state.drills.includes(current) ? current : "Total";
-        }
-
-        function renderDrillInputs() {
-            const container = document.getElementById('drillInputs');
-            container.innerHTML = state.drills.map(d => `
-                <div class="hoops-card p-5 flex justify-between items-center border-l-4 border-orange-500">
-                    <span class="font-bold text-[11px] uppercase tracking-widest text-zinc-500">${d}</span>
-                    <input type="number" placeholder="0" data-drill="${d}" class="drill-input bg-black w-24 p-4 rounded-2xl border border-zinc-800 text-center text-orange-500 font-bold text-xl outline-none focus:border-orange-500 transition-all">
-                </div>
-            `).join('');
-
-        }
-
-        function saveWorkout() {
-            const entry = { date: new Date().toISOString().split('T')[0], ts: Date.now(), data: {} };
-            let totalInSession = 0;
-            document.querySelectorAll('.drill-input').forEach(input => {
-                const val = parseInt(input.value) || 0;
-                if (val > 0) { entry.data[input.getAttribute('data-drill')] = val; totalInSession += val; }
-            });
-
-            if (totalInSession > 0) {
-                state.history.push(entry);
-                saveLocal();
-                pushToCloud();
-                showPage('dashboard');
-                updateChart();
-            } else {
-                alert("Enter at least one score!");
+        function renderDrills() {
+            const container = document.getElementById('drills-list');
+            if (state.drills.length === 0) {
+                container.innerHTML = `<p class="text-center text-slate-400 py-8">No drills yet. Add one to get started!</p>`;
+                return;
             }
 
+            container.innerHTML = state.drills.map(drill => {
+                const drillSessions = state.sessions.filter(s => s.drillId === drill.id);
+                const totalMakes = drillSessions.reduce((sum, s) => sum + s.makes, 0);
+
+                const totalAttempts = drillSessions.reduce((sum, s) => sum + (s.makes + s.misses), 0);
+                const accuracy = totalAttempts > 0 ? Math.round((totalMakes / totalAttempts) * 100) : 0;
+
+                return `
+                    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center justify-between fade-in">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white font-black" style="background: ${drill.color}">
+                                ${drill.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-800">${drill.name}</h4>
+                                <p class="text-xs text-slate-400 font-bold uppercase">${accuracy}% Precision</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-lg font-800 text-slate-800">${totalMakes}</p>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Makes</p>
+                        </div>
+                    </div>
+
+                `;
+            }).join('');
         }
 
-        function updateChart() {
-            const ctx = document.getElementById('mainChart').getContext('2d');
-            const filter = document.getElementById('graphFilter').value;
-            const recent = state.history.slice(-10);
-            const labels = recent.map(h => h.date.split('-').slice(1).join('/'));
-            const data = recent.map(h => filter === 'Total' ? Object.values(h.data).reduce((a, b) => a + b, 0) : (h.data[filter] || 0));
+        function updateStats() {
+            const totalMakes = state.sessions.reduce((sum, s) => sum + s.makes, 0);
+            const totalAttempts = state.sessions.reduce((sum, s) => sum + (s.makes + s.misses), 0);
+            const avgAcc = totalAttempts > 0 ? Math.round((totalMakes / totalAttempts) * 100) : 0;
 
-            if (chart) chart.destroy();
-            chart = new Chart(ctx, {
+            document.getElementById('total-makes').innerText = totalMakes.toLocaleString();
+            document.getElementById('avg-accuracy').innerText = `${avgAcc}%`;
+        }
+
+        function populateDrillSelects() {
+            const options = state.drills.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+            document.getElementById('log-drill-select').innerHTML = options;
+            
+            const filter = document.getElementById('chart-filter');
+            filter.innerHTML = `<option value="all">All Drills</option>` + options;
+
+        }
+
+        // --- Visuals ---
+        function initChart() {
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            myChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels,
+                    labels: [],
                     datasets: [{
-                        data, borderColor: '#ff5500', backgroundColor: 'rgba(255, 85, 0, 0.05)',
-                        fill: true, tension: 0.4, borderWidth: 4, pointRadius: 5, pointBackgroundColor: '#ff5500', pointBorderWidth: 0
+                        label: 'Accuracy %',
+                        data: [],
+                        borderColor: '#f97316',
+                        backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#f97316',
+
+                        pointRadius: 4,
+                        pointHoverRadius: 6
                     }]
                 },
-
                 options: {
-                    responsive: true, maintainAspectRatio: false,
+                    responsive: true,
+                    maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        y: { display: false, beginAtZero: true },
-                        x: { grid: { display: false }, ticks: { color: '#444', font: { size: 9, weight: '700' } } }
+                        y: { 
+                            beginAtZero: true, 
+                            max: 100,
+                            grid: { color: '#f1f5f9' },
+                            ticks: { font: { size: 10, weight: 'bold' }, color: '#94a3b8' }
+                        },
+                        x: { 
+                            grid: { display: false },
+                            ticks: { font: { size: 10, weight: 'bold' }, color: '#94a3b8' }
+                        }
+
                     }
                 }
             });
+            updateChart();
         }
 
-        function renderDrillList() {
-            const list = document.getElementById('drillList');
-            list.innerHTML = state.drills.map((d, i) => `
-                <li class="flex justify-between items-center p-4 bg-zinc-900/50 rounded-2xl">
-                    <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">${d}</span>
-                    <button onclick="removeDrill(${i})" class="text-red-500 font-bold px-3">✕</button>
-                </li>
-            `).join('');
+        function updateChart() {
+            const filterValue = document.getElementById('chart-filter').value;
+            let filteredSessions = [...state.sessions];
 
+            if (filterValue !== 'all') {
+                filteredSessions = filteredSessions.filter(s => s.drillId === parseInt(filterValue));
+            }
+
+            const grouped = filteredSessions.reduce((acc, s) => {
+                const date = new Date(s.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                if (!acc[date]) acc[date] = { m: 0, a: 0 };
+                acc[date].m += s.makes;
+                acc[date].a += (s.makes + s.misses);
+
+                return acc;
+            }, {});
+
+            const labels = Object.keys(grouped);
+            const data = Object.values(grouped).map(g => Math.round((g.m / g.a) * 100) || 0);
+
+            myChart.data.labels = labels;
+            myChart.data.datasets[0].data = data;
+            myChart.update();
         }
 
-        function addDrill() {
-            const val = document.getElementById('newDrill').value.trim();
-            if (val) {
-                state.drills.push(val);
-                document.getElementById('newDrill').value = '';
-                saveLocal(); pushToCloud(); renderDrillList();
+        // --- UI ---
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+        function toggleSettings() { openModal('settings-modal'); }
+
+        function exportData() {
+            const dataStr = JSON.stringify(state, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `hooptrack_backup.json`;
+            link.click();
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (imported.drills && imported.sessions) {
+                        state = imported;
+                        saveState();
+                        location.reload();
+                    }
+
+                } catch (err) { alert("Import failed: Invalid file."); }
+            };
+            reader.readAsText(file);
+        }
+
+        function resetData() {
+            if (confirm("Reset everything? This cannot be undone.")) {
+                state = { drills: [], sessions: [] };
+                saveState();
+                location.reload();
             }
         }
 
-        function removeDrill(i) {
-            state.drills.splice(i, 1);
-            saveLocal(); pushToCloud(); renderDrillList();
+        function showSection(name) {
+            if(name === 'history') alert("Session history log is under development. Your data is being tracked in the graph above!");
         }
     </script>
 </body>
