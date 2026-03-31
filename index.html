@@ -1,481 +1,398 @@
-# HoopsPro V2.5: The Ultimate Sync Edition
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HoopsPro V2.5</title>
+    <title>HoopsPro Elite</title>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <!-- UI Frameworks -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap');
         
         :root {
-            --hoops-orange: #ff6b00;
-            --hoops-black: #080808;
-            --hoops-gray: #121212;
-            --hoops-accent: #22c55e;
+            --primary: #ff5500;
+            --bg: #050505;
+            --card: #0f0f0f;
+
         }
 
         body {
-
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--hoops-black);
-            color: #ffffff;
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: var(--bg);
+            color: #fff;
             -webkit-tap-highlight-color: transparent;
-            overscroll-behavior: none;
         }
 
-        .dashboard-card {
-            background: var(--hoops-gray);
-            border: 1px solid #1f1f1f;
-            border-radius: 32px;
-            transition: transform 0.2s;
+        .hoops-card {
+            background: var(--card);
+            border: 1px solid #1a1a1a;
+            border-radius: 30px;
         }
 
-        .btn-primary {
-            background: var(--hoops-orange);
+        .btn-main {
+            background: var(--primary);
             color: white;
-            font-weight: 800;
-            border-radius: 24px;
+            font-weight: 700;
 
-            box-shadow: 0 8px 30px rgba(255, 107, 0, 0.15);
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(255, 85, 0, 0.2);
         }
 
-        .btn-primary:active { transform: scale(0.96); }
+        .btn-main:active { transform: scale(0.96); }
 
-        .hidden-section { display: none; }
+        .hidden { display: none; }
         
-        .sync-indicator {
-            width: 8px; height: 8px; border-radius: 50%;
-            transition: all 0.3s;
+        .status-pill {
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        /* Loading States */
-        #syncOverlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.98);
-            z-index: 9999; display: none; flex-direction: column;
-            align-items: center; justify-content: center; text-align: center;
-        }
-
-
-        .loader-ring {
-            width: 48px; height: 48px; border: 4px solid #1a1a1a;
-            border-bottom-color: var(--hoops-orange); border-radius: 50%;
-            animation: rotation 1s linear infinite;
-        }
-
-        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        #toast {
-            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
-            background: var(--hoops-accent); color: black; padding: 12px 24px;
-            border-radius: 40px; font-weight: 800; font-size: 12px;
-            opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 10000;
-        }
+        .chart-container { position: relative; height: 220px; width: 100%; }
     </style>
 </head>
-<body class="max-w-md mx-auto min-h-screen flex flex-col antialiased selection:bg-orange-500/30">
 
-    <!-- Loading UI -->
-
-    <div id="syncOverlay">
-        <div class="loader-ring mb-6"></div>
-        <h2 class="text-2xl font-black italic tracking-tighter">RECOVERING VAULT...</h2>
-        <p id="overlayStatus" class="text-gray-600 text-xs mt-2 font-bold px-12">Checking primary and secondary cloud backups...</p>
-        <button onclick="closeOverlay()" class="mt-12 text-[10px] text-gray-700 font-black uppercase tracking-[0.3em] hover:text-white">Skip & Run Locally</button>
-    </div>
-
-    <div id="toast">Changes Saved! 🏀</div>
+<body class="max-w-md mx-auto min-h-screen flex flex-col p-6">
 
     <!-- Header -->
-    <header class="p-6 pb-2 flex justify-between items-start">
+    <header class="flex justify-between items-start mb-8">
         <div>
-            <h1 class="text-2xl font-black italic tracking-tighter leading-none">HOOPSPRO <span class="text-orange-600">V2.5</span></h1>
-            <div class="flex items-center gap-2 mt-3">
-                <div id="syncStatusDot" class="sync-indicator bg-gray-800"></div>
-                <span id="syncStatusLabel" class="text-[9px] text-gray-500 font-black uppercase tracking-widest">Checking Sync...</span>
+            <h1 class="text-3xl font-bold italic tracking-tighter leading-none">HOOPSPRO <span class="text-orange-600">ELITE</span></h1>
+            <div id="syncStatus" class="flex items-center gap-2 mt-4">
+                <div id="statusDot" class="w-2 h-2 rounded-full bg-red-500"></div>
+                <span id="statusLabel" class="status-pill bg-gray-900 text-gray-500">Connecting...</span>
             </div>
         </div>
-        <button onclick="toggleSection('settings')" class="p-3 bg-gray-900 rounded-2xl border border-gray-800 transition-colors active:bg-gray-800">
-
-            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
+        <button onclick="showPage('settings')" class="p-4 bg-zinc-900 rounded-2xl border border-zinc-800">
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
         </button>
     </header>
 
-    <main class="flex-1 px-6 pb-24 overflow-y-auto">
+    <main class="flex-1 pb-24">
         
-        <!-- Home View -->
-        <div id="homeSection">
-            <!-- Quote Section -->
-            <section class="dashboard-card p-7 mb-6 relative">
-                <span class="text-[10px] font-black text-orange-600 uppercase tracking-[0.2em] block mb-4">Coach's Perspective</span>
-                <p id="quoteText" class="text-xl font-extrabold italic leading-tight tracking-tight">"..."</p>
-                <p id="authorText" class="text-xs text-gray-500 mt-4 font-black uppercase tracking-widest">— Kara Lawson</p>
+        <!-- DASHBOARD PAGE -->
+
+        <div id="page-dashboard">
+            <section class="hoops-card p-7 mb-6 relative overflow-hidden">
+                <span class="text-[10px] font-bold text-orange-600 uppercase tracking-widest block mb-4">Coach's Quote</span>
+                <p id="quoteText" class="text-lg font-bold italic leading-tight">"..."</p>
+                <p id="authorText" class="text-xs text-gray-500 mt-5 font-bold">— Kara Lawson</p>
             </section>
 
-            <!-- Stats -->
-            <div class="grid grid-cols-2 gap-4 mb-6">
-                <div class="dashboard-card p-6 text-center">
-                    <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Consistency</span>
-
-                    <div id="statDays" class="text-5xl font-black mt-2 tracking-tighter">0</div>
-                    <span class="text-[8px] text-gray-600 font-black uppercase mt-1 block">Days Logged</span>
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div class="hoops-card p-6 text-center">
+                    <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Training Days</span>
+                    <div id="statDays" class="text-5xl font-bold mt-2">0</div>
                 </div>
-                <div class="dashboard-card p-6 text-center border-orange-500/10">
+                <div class="hoops-card p-6 text-center">
                     <span class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Total Makes</span>
-                    <div id="statTotal" class="text-5xl font-black mt-2 text-orange-500 tracking-tighter">0</div>
-                    <span class="text-[8px] text-orange-900 font-black uppercase mt-1 block tracking-widest">Volume</span>
+                    <div id="statTotal" class="text-5xl font-bold mt-2 text-orange-500">0</div>
                 </div>
             </div>
 
-            <button onclick="toggleSection('log')" class="btn-primary w-full py-6 text-xl shadow-2xl mb-10 flex justify-center items-center gap-4">
+            <button onclick="showPage('log')" class="btn-main w-full py-6 text-xl mb-10 flex justify-center items-center gap-3">
+
                 <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path></svg>
                 RECORD SESSION
             </button>
 
-            <!-- Analytics -->
-            <div class="dashboard-card p-6">
+            <div class="hoops-card p-6">
                 <div class="flex justify-between items-center mb-6">
-                    <h3 class="font-black text-[10px] uppercase tracking-[0.2em] text-gray-500">Progress Tracker</h3>
-
-                    <select id="graphFilter" onchange="updateGraph()" class="bg-transparent text-orange-500 text-[10px] font-black border-none outline-none appearance-none cursor-pointer">
+                    <h3 class="font-bold text-xs uppercase tracking-widest text-gray-500">Analytics</h3>
+                    <select id="graphFilter" onchange="updateChart()" class="bg-transparent text-orange-500 text-[10px] font-bold outline-none cursor-pointer">
                         <option value="Total">ALL DRILLS</option>
                     </select>
                 </div>
-                <div class="h-[200px]">
+                <div class="chart-container">
                     <canvas id="mainChart"></canvas>
                 </div>
             </div>
         </div>
 
-        <!-- Workout Logger -->
-        <div id="logSection" class="hidden-section">
-            <div class="flex items-center justify-between mb-8">
-                <div>
-                    <h2 class="text-4xl font-black italic tracking-tighter">The Lab.</h2>
-                    <p class="text-gray-500 text-[10px] font-black uppercase tracking-widest mt-1">Record today's results.</p>
-                </div>
-            </div>
-            <div id="drillInputList" class="space-y-4 mb-12"></div>
+        <!-- LOGGING PAGE -->
+        <div id="page-log" class="hidden">
 
+            <h2 class="text-4xl font-bold mb-10 tracking-tighter italic">Log Session</h2>
+            <div id="drillInputs" class="space-y-4 mb-12"></div>
             <div class="flex gap-4">
-                <button onclick="toggleSection('home')" class="flex-1 py-5 bg-gray-900 rounded-3xl font-black text-gray-500 uppercase text-xs tracking-widest">Cancel</button>
-                <button onclick="saveWorkout()" class="flex-1 py-5 btn-primary rounded-3xl font-black uppercase text-xs tracking-widest">Complete</button>
+                <button onclick="showPage('dashboard')" class="flex-1 py-5 bg-zinc-900 rounded-3xl font-bold text-gray-500 uppercase text-xs">Cancel</button>
+                <button onclick="saveWorkout()" class="flex-1 py-5 btn-main rounded-3xl font-bold uppercase text-xs">Submit</button>
             </div>
         </div>
 
-        <!-- Settings & Sync Dashboard -->
-        <div id="settingsSection" class="hidden-section">
-            <h2 class="text-4xl font-black italic tracking-tighter mb-10 leading-none">SYSTEM<br><span class="text-orange-600">SETTINGS</span></h2>
+        <!-- SETTINGS PAGE -->
+        <div id="page-settings" class="hidden">
+            <h2 class="text-4xl font-bold mb-10 tracking-tighter italic">System</h2>
             
-            <!-- Sync Health -->
-            <div class="dashboard-card p-6 mb-6">
-                <h3 class="text-orange-500 font-black text-xs uppercase tracking-widest mb-4">Sync Health Check</h3>
-                <div id="diagnosticLog" class="bg-black/40 rounded-2xl p-4 font-mono text-[9px] text-gray-500 mb-4 h-24 overflow-y-auto border border-white/5">
-                    Initializing HoopsPro V2.5...<br>
+            <div class="hoops-card p-6 mb-6">
+                <h3 class="text-orange-500 font-bold text-xs uppercase tracking-widest mb-4">Cloud Linking</h3>
+                <p class="text-[10px] text-gray-500 mb-6">Enter your <b>Family Key</b> to sync results across devices.</p>
+                <div class="flex gap-2">
+                    <input type="text" id="familyKey" placeholder="e.g. MyFamilyHoops" class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 text-sm flex-1 outline-none focus:border-orange-500 transition-all">
+                    <button onclick="saveKey()" class="px-6 btn-main rounded-2xl text-[10px]">SAVE</button>
                 </div>
-                <button onclick="sync(true)" class="w-full py-4 bg-gray-800 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white active:bg-gray-700">Force Cloud Refresh</button>
+
             </div>
 
-
-            <!-- The One-Click Sync Link -->
-            <div class="dashboard-card p-7 mb-6 border-orange-500/20">
-                <h3 class="text-orange-500 font-black text-xs uppercase tracking-[0.2em] mb-3">Master Sync Link</h3>
-                <p class="text-[10px] text-gray-500 mb-6 leading-relaxed">This link contains her entire history. Send it to her phone to sync everything instantly, even if the cloud is blocked.</p>
-                <button onclick="copyDataUrl()" class="w-full py-5 btn-primary text-[11px] uppercase tracking-[0.2em] mb-2">Generate & Copy Link</button>
-                <input type="text" id="magicUrlDisplay" readonly class="w-full bg-black/50 border border-gray-800 rounded-xl p-3 text-[8px] font-mono text-gray-600 mt-2">
-            </div>
-
-            <!-- Drill Management -->
-            <div class="dashboard-card p-7 mb-8">
-                <h3 class="text-gray-400 font-black text-xs uppercase tracking-[0.2em] mb-6">Manage Drills</h3>
+            <div class="hoops-card p-6 mb-10">
+                <h3 class="text-gray-500 font-bold text-xs uppercase tracking-widest mb-6">Manage Drills</h3>
                 <div class="flex gap-2 mb-6">
-                    <input type="text" id="newDrillName" placeholder="Drill Title" class="bg-black/50 border border-gray-800 rounded-2xl p-4 text-sm flex-1 outline-none focus:border-orange-500 transition-all">
-                    <button onclick="addDrill()" class="px-6 btn-primary rounded-2xl font-black text-xl">+</button>
+                    <input type="text" id="newDrill" placeholder="Drill Name" class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 text-sm flex-1 outline-none">
+                    <button onclick="addDrill()" class="px-6 btn-main rounded-2xl font-bold text-xl">+</button>
                 </div>
-                <ul id="drillEditList" class="space-y-3"></ul>
+                <ul id="drillList" class="space-y-3"></ul>
             </div>
 
-            <button onclick="toggleSection('home')" class="w-full py-5 bg-gray-900 rounded-3xl font-black text-xs uppercase tracking-[0.3em] text-gray-400 border border-gray-800">Return to Home</button>
-
+            <button onclick="showPage('dashboard')" class="w-full py-5 bg-zinc-900 rounded-3xl font-bold text-xs uppercase text-gray-400">Back to Dashboard</button>
         </div>
     </main>
 
     <script>
         const QUOTES = [
-            {q: "Handle hard better.", a: "Kara Lawson"},
-            {q: "Confidence is the most important thing to bring each day.", a: "Kara Lawson"},
+            {q: "We all wait in life for things to get easier... It will never get easier. What happens is you handle hard better.", a: "Kara Lawson"},
+            {q: "Make yourself a person that handles hard stuff well.", a: "Kara Lawson"},
+
             {q: "Great players don’t get tired.", a: "Geno Auriemma"},
             {q: "Average is always available. Greatness is not.", a: "Geno Auriemma"},
             {q: "You don’t rise to the occasion; you sink to the level of your training.", a: "Geno Auriemma"}
         ];
 
+        // CONFIG UPDATED WITH USER KEYS
+        const firebaseConfig = {
+            apiKey: "AIzaSyBb_-4N9xnioprkZa6OLtOCUWg3iDvpVuY",
+            authDomain: "hoopspro-227de.firebaseapp.com",
+            projectId: "hoopspro-227de",
+            storageBucket: "hoopspro-227de.firebasestorage.app",
+            messagingSenderId: "647339514982",
+            appId: "1:647339514982:web:9f5af3583d7253d0bfe1a7",
+            measurementId: "G-NKY90WLSKD"
+        };
+
         let state = {
-            id: null,
+            familyKey: localStorage.getItem('hoops_family_key') || '',
             drills: ["Form Shooting (10)", "Free Throws", "Mikan Drill"],
+
             history: []
         };
-        let myChart = null;
+        let db = null;
+        let chart = null;
 
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
 
-        window.onload = async () => {
-            logDiag("System Initializing...");
-            const urlParams = new URLSearchParams(window.location.search);
-            const urlId = urlParams.get('id');
-            const urlData = urlParams.get('data');
-
-            // 1. Data Recovery from URL (Failsafe)
-            if (urlData) {
-                logDiag("Found Data in URL! Recovering...");
-                try {
-                    const decoded = JSON.parse(atob(urlData));
-                    state.history = decoded.history || [];
-                    state.drills = decoded.drills || state.drills;
-                    state.id = decoded.id || Math.random().toString(36).substr(2, 9);
-                    saveLocal();
-                    window.history.replaceState({}, document.title, window.location.pathname + "?id=" + state.id);
-                    showToast("History Recovered! 🏀");
-                } catch (e) {
-                    logDiag("URL Data Error: " + e.message);
-
-                }
+        window.onload = () => {
+            loadLocal();
+            initQuotes();
+            if (state.familyKey) {
+                document.getElementById('familyKey').value = state.familyKey;
+                startSync();
+            } else {
+                updateStatus('offline');
             }
+            refreshStats();
 
-            // 2. ID Initialization
-            if (urlId && !urlData) {
-                state.id = urlId;
-                localStorage.setItem('hp_id', urlId);
-                await sync(true); 
-            } else if (!state.id) {
-                state.id = localStorage.getItem('hp_id') || Math.random().toString(36).substr(2, 9);
-                localStorage.setItem('hp_id', state.id);
-                loadLocal();
-            }
-
-            initApp();
-            sync(); // Normal background sync
+            updateChart();
         };
 
-        function logDiag(msg) {
-
-            const l = document.getElementById('diagnosticLog');
-            l.innerHTML += `[${new Date().toLocaleTimeString()}] ${msg}<br>`;
-            l.scrollTop = l.scrollHeight;
+        function initQuotes() {
+            const dayIdx = Math.floor(Date.now() / 86400000) % QUOTES.length;
+            document.getElementById('quoteText').innerText = `"${QUOTES[dayIdx].q}"`;
+            document.getElementById('authorText').innerText = `— ${QUOTES[dayIdx].a}`;
         }
 
-        function initApp() {
-            const day = Math.floor(Date.now() / 86400000) % QUOTES.length;
-            document.getElementById('quoteText').innerText = `"${QUOTES[day].q}"`;
-            document.getElementById('authorText').innerText = `— ${QUOTES[day].a}`;
-            refreshUI();
+        function showPage(p) {
+            document.querySelectorAll('main > div').forEach(d => d.classList.add('hidden'));
+            document.getElementById('page-' + p).classList.remove('hidden');
+            if (p === 'log') renderDrillInputs();
+            if (p === 'settings') renderDrillList();
+        }
+
+        function saveKey() {
+            const val = document.getElementById('familyKey').value.trim();
+            if (val) {
+
+                state.familyKey = val;
+                localStorage.setItem('hoops_family_key', val);
+                startSync();
+            }
+        }
+
+        function updateStatus(s) {
+            const dot = document.getElementById('statusDot');
+            const lbl = document.getElementById('statusLabel');
+            if (s === 'online') {
+                dot.className = 'w-2 h-2 rounded-full bg-green-500';
+                lbl.innerText = "Online";
+                lbl.className = 'status-pill bg-green-900/20 text-green-500';
+            } else if (s === 'pending') {
+                dot.className = 'w-2 h-2 rounded-full bg-yellow-500 animate-pulse';
+                lbl.innerText = "Syncing...";
+                lbl.className = 'status-pill bg-yellow-900/20 text-yellow-500';
+            } else {
+                dot.className = 'w-2 h-2 rounded-full bg-red-500';
+
+                lbl.innerText = "Offline";
+                lbl.className = 'status-pill bg-red-900/20 text-red-500';
+            }
+        }
+
+        function startSync() {
+            if (!db || !state.familyKey) return;
+            updateStatus('pending');
+
+            db.collection("trainers").doc(state.familyKey).onSnapshot((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    state.history = data.history || [];
+                    state.drills = data.drills || state.drills;
+                    saveLocal();
+                    refreshStats();
+                    updateChart();
+                    updateStatus('online');
+                } else {
+
+                    pushToCloud();
+                    updateStatus('online');
+                }
+            }, (error) => {
+                console.error("Sync Error:", error);
+                updateStatus('offline');
+            });
+        }
+
+        function pushToCloud() {
+            if (!db || !state.familyKey) return;
+            db.collection("trainers").doc(state.familyKey).set({
+                history: state.history,
+                drills: state.drills,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
         }
 
         function loadLocal() {
-            const d = localStorage.getItem(`hp_data_${state.id}`);
-            if (d) {
-                const p = JSON.parse(d);
-                state.drills = p.drills || state.drills;
-                state.history = p.history || state.history;
-            }
 
+            const data = localStorage.getItem('hoops_local_data');
+            if (data) {
+                const parsed = JSON.parse(data);
+                state.history = parsed.history || [];
+                state.drills = parsed.drills || state.drills;
+            }
         }
 
         function saveLocal() {
-            localStorage.setItem(`hp_data_${state.id}`, JSON.stringify(state));
-            refreshUI();
+            localStorage.setItem('hoops_local_data', JSON.stringify(state));
+            refreshStats();
         }
 
-        /**
-         * MULTI-CLOUD SYNC ENGINE V2.5
-         */
-        async function sync(isForced = false) {
-            if (isForced) document.getElementById('syncOverlay').style.display = 'flex';
-            setSyncDot('pending');
-            logDiag("Attempting Cloud Handshake...");
-
-            const endpoints = [
-                `https://corsproxy.io{state.id}`,
-                `https://kvstore.io{state.id}`
-            ];
+        function refreshStats() {
+            const uniqueDays = new Set(state.history.map(h => h.date)).size;
+            document.getElementById('statDays').innerText = uniqueDays;
+            const total = state.history.reduce((acc, entry) => acc + Object.values(entry.data).reduce((a, b) => a + b, 0), 0);
+            document.getElementById('statTotal').innerText = total;
 
 
-            let success = false;
-            for (let url of endpoints) {
-                if (success) break;
-                try {
-                    logDiag(`Trying endpoint: ${url.substring(0, 30)}...`);
-                    const res = await fetch(url, { cache: 'no-store' });
-                    if (res.ok) {
-                        const cloud = await res.json();
-                        if (isForced) {
-                            state.history = cloud.history || [];
-                            state.drills = cloud.drills || state.drills;
-                        } else {
-                            // Merge
-                            const localKeys = new Set(state.history.map(h => h.ts));
-                            (cloud.history || []).forEach(h => { if(!localKeys.has(h.ts)) state.history.push(h); });
-                            cloud.drills?.forEach(d => { if(!state.drills.includes(d)) state.drills.push(d); });
-                        }
-                        saveLocal();
-                        success = true;
-
-                        logDiag("Cloud Sync Successful.");
-                    }
-                } catch (e) {
-                    logDiag(`Endpoint Failed: ${e.message}`);
-                }
-            }
-
-            // Silent Push
-            if (success || !isForced) {
-                fetch(endpoints[0], { method: 'POST', body: JSON.stringify(state), mode: 'no-cors' });
-            }
-
-            setSyncDot(success ? 'online' : 'offline');
-            if (isForced) closeOverlay();
-        }
-
-        function setSyncDot(s) {
-            const dot = document.getElementById('syncStatusDot');
-            const lbl = document.getElementById('syncStatusLabel');
-
-            if (s === 'online') { dot.className = 'sync-indicator bg-green-500'; lbl.innerText = "Synced"; }
-            else if (s === 'pending') { dot.className = 'sync-indicator bg-yellow-500 animate-pulse'; lbl.innerText = "Connecting..."; }
-            else { dot.className = 'sync-indicator bg-red-500'; lbl.innerText = "Offline / Blocked"; }
-        }
-
-        function closeOverlay() { document.getElementById('syncOverlay').style.display = 'none'; }
-
-        function refreshUI() {
-            document.getElementById('statDays').innerText = new Set(state.history.map(h => h.date)).size;
-            document.getElementById('statTotal').innerText = state.history.reduce((s, e) => s + Object.values(e.data).reduce((a,b)=>a+b, 0), 0);
-            
-            const f = document.getElementById('graphFilter');
-            const current = f.value;
-            f.innerHTML = '<option value="Total">ALL DRILLS</option>';
+            const filter = document.getElementById('graphFilter');
+            const current = filter.value;
+            filter.innerHTML = '<option value="Total">ALL DRILLS</option>';
             state.drills.forEach(d => {
-                const o = document.createElement('option');
-                o.value = d; o.innerText = d.toUpperCase();
-                f.appendChild(o);
+                const opt = document.createElement('option');
+                opt.value = d; opt.innerText = d.toUpperCase();
+                filter.appendChild(opt);
             });
-
-            f.value = state.drills.includes(current) ? current : "Total";
-            updateGraph();
+            filter.value = state.drills.includes(current) ? current : "Total";
         }
 
-        function toggleSection(s) {
-            document.getElementById('homeSection').style.display = s === 'home' ? 'block' : 'none';
-            document.getElementById('logSection').style.display = s === 'log' ? 'block' : 'none';
-            document.getElementById('settingsSection').style.display = s === 'settings' ? 'block' : 'none';
-            if (s === 'log') renderLogInputs();
-            if (s === 'settings') renderDrillList();
-        }
-
-        function renderLogInputs() {
-            const list = document.getElementById('drillInputList');
-            list.innerHTML = state.drills.map(d => `
-                <div class="dashboard-card p-5 flex justify-between items-center border-l-8 border-orange-600">
-                    <span class="font-black text-[10px] uppercase tracking-widest text-gray-500">${d}</span>
-                    <input type="number" placeholder="0" data-drill="${d}" class="shot-input bg-black/50 w-24 p-4 rounded-2xl border border-gray-800 text-center text-orange-500 font-black text-xl outline-none">
+        function renderDrillInputs() {
+            const container = document.getElementById('drillInputs');
+            container.innerHTML = state.drills.map(d => `
+                <div class="hoops-card p-5 flex justify-between items-center border-l-4 border-orange-500">
+                    <span class="font-bold text-[11px] uppercase tracking-widest text-zinc-500">${d}</span>
+                    <input type="number" placeholder="0" data-drill="${d}" class="drill-input bg-black w-24 p-4 rounded-2xl border border-zinc-800 text-center text-orange-500 font-bold text-xl outline-none focus:border-orange-500 transition-all">
                 </div>
-
             `).join('');
+
         }
 
         function saveWorkout() {
             const entry = { date: new Date().toISOString().split('T')[0], ts: Date.now(), data: {} };
-            let total = 0;
-            document.querySelectorAll('.shot-input').forEach(i => {
-                const v = parseInt(i.value) || 0;
-                if (v > 0) { entry.data[i.getAttribute('data-drill')] = v; total += v; }
+            let totalInSession = 0;
+            document.querySelectorAll('.drill-input').forEach(input => {
+                const val = parseInt(input.value) || 0;
+                if (val > 0) { entry.data[input.getAttribute('data-drill')] = val; totalInSession += val; }
             });
-            if (total === 0) return alert("Log some results!");
-            state.history.push(entry);
-            saveLocal();
-            sync();
-            showToast("Session Saved!");
-            toggleSection('home');
+
+            if (totalInSession > 0) {
+                state.history.push(entry);
+                saveLocal();
+                pushToCloud();
+                showPage('dashboard');
+                updateChart();
+            } else {
+                alert("Enter at least one score!");
+            }
+
         }
 
-        function updateGraph() {
-
+        function updateChart() {
             const ctx = document.getElementById('mainChart').getContext('2d');
             const filter = document.getElementById('graphFilter').value;
-            const recent = state.history.slice(-12);
+            const recent = state.history.slice(-10);
             const labels = recent.map(h => h.date.split('-').slice(1).join('/'));
-            const data = recent.map(h => filter === 'Total' ? Object.values(h.data).reduce((a,b)=>a+b, 0) : (h.data[filter] || 0));
+            const data = recent.map(h => filter === 'Total' ? Object.values(h.data).reduce((a, b) => a + b, 0) : (h.data[filter] || 0));
 
-            if (myChart) myChart.destroy();
-            myChart = new Chart(ctx, {
+            if (chart) chart.destroy();
+            chart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels,
                     datasets: [{
-                        data, borderColor: '#ff6b00', backgroundColor: 'rgba(255, 107, 0, 0.03)',
-                        fill: true, tension: 0.4, borderWidth: 4, pointRadius: 5, pointBackgroundColor: '#ff6b00', pointBorderWidth: 0
+                        data, borderColor: '#ff5500', backgroundColor: 'rgba(255, 85, 0, 0.05)',
+                        fill: true, tension: 0.4, borderWidth: 4, pointRadius: 5, pointBackgroundColor: '#ff5500', pointBorderWidth: 0
                     }]
                 },
+
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
-
-                    scales: { y: { display: false, beginAtZero: true }, x: { grid: { display: false }, ticks: { color: '#222', font: { size: 9, weight: '800' } } } }
+                    scales: {
+                        y: { display: false, beginAtZero: true },
+                        x: { grid: { display: false }, ticks: { color: '#444', font: { size: 9, weight: '700' } } }
+                    }
                 }
             });
         }
 
         function renderDrillList() {
-            const list = document.getElementById('drillEditList');
+            const list = document.getElementById('drillList');
             list.innerHTML = state.drills.map((d, i) => `
-                <li class="flex justify-between items-center p-4 bg-black/30 rounded-2xl">
-                    <span class="text-xs font-black uppercase text-gray-500 tracking-widest">${d}</span>
-                    <button onclick="deleteDrill(${i})" class="text-red-900 font-black px-3 text-lg">✕</button>
+                <li class="flex justify-between items-center p-4 bg-zinc-900/50 rounded-2xl">
+                    <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">${d}</span>
+                    <button onclick="removeDrill(${i})" class="text-red-500 font-bold px-3">✕</button>
                 </li>
             `).join('');
+
         }
 
         function addDrill() {
-            const v = document.getElementById('newDrillName').value.trim();
-            if (v) { state.drills.push(v); document.getElementById('newDrillName').value = ''; saveLocal(); renderDrillList(); }
+            const val = document.getElementById('newDrill').value.trim();
+            if (val) {
+                state.drills.push(val);
+                document.getElementById('newDrill').value = '';
+                saveLocal(); pushToCloud(); renderDrillList();
+            }
         }
 
-
-        function deleteDrill(i) { state.drills.splice(i, 1); saveLocal(); renderDrillList(); }
-
-        /**
-         * THE MASTER SYNC LINK GENERATOR
-         */
-        function copyDataUrl() {
-            const dataString = btoa(JSON.stringify(state));
-            const base = window.location.href.split('?')[0];
-            const fullUrl = `${base}?data=${dataString}`;
-            document.getElementById('magicUrlDisplay').value = fullUrl;
-            
-            const tempInput = document.createElement('input');
-            document.body.appendChild(tempInput);
-            tempInput.value = fullUrl;
-            tempInput.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempInput);
-            
-            showToast("Sync Link Copied!");
-
-        }
-
-        function copyToClipboard(id) {
-            const el = document.getElementById(id);
-            el.select();
-            document.execCommand('copy');
-            showToast("Copied!");
-        }
-
-        function showToast(msg) {
-            const t = document.getElementById('toast');
-            t.innerText = msg;
-            t.style.opacity = '1';
-            setTimeout(() => t.style.opacity = '0', 2500);
+        function removeDrill(i) {
+            state.drills.splice(i, 1);
+            saveLocal(); pushToCloud(); renderDrillList();
         }
     </script>
 </body>
